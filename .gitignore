@@ -14,3 +14,9 @@ venv.bak/
 
 # macOS
 .DS_Store
+
+# Data and outputs
+data/**/*.csv
+data/**/*.png
+data/**/*.html
+!data/**/.gitkeep
