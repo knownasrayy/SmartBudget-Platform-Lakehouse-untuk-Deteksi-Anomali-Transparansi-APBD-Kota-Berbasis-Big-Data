@@ -1,98 +1,86 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, sum, avg, count
+"""
+run_pipeline.py — SmartBudget Lakehouse Pipeline
+Entry point utama: Bronze → Silver → Join → Gold
+
+Cara run:
+    cd src/lakehouse
+    python run_pipeline.py
+"""
+
+import os
+import sys
+import time
 from pathlib import Path
 
-# =====================================================
-# SPARK SESSION
-# =====================================================
+sys.path.insert(0, str(Path(__file__).parent))
 
-spark = (
-    SparkSession.builder
-    .appName("SmartBudgetPipeline")
-    .master("local[*]")
-    .getOrCreate()
-)
+from bronze_loader   import get_spark, run_bronze
+from silver_transform import run_silver
+from spark_join       import run_join
+from gold_aggregation import run_gold
+from pyspark.sql.functions import col
 
-# =====================================================
-# PATH
-# =====================================================
 
-BASE = Path(__file__).resolve().parents[2]
+def run_pipeline():
+    t_total = time.time()
 
-SIPD_PATH = BASE / "data" / "bronze" / "sipd_dummy.csv"
-SENTIMENT_PATH = BASE / "data" / "bronze" / "sentiment_dummy.csv"
+    print("=" * 60)
+    print("  SmartBudget Lakehouse Pipeline")
+    print("  Bronze ─► Silver ─► Join ─► Gold")
+    print("=" * 60)
 
-# =====================================================
-# BRONZE LAYER
-# =====================================================
+    spark = get_spark()
+    spark.sparkContext.setLogLevel("WARN")
+    print("[Spark] Session ready\n")
 
-print("\n=== BRONZE LAYER ===")
+    try:
+        # Step 1: Bronze
+        print("[Step 1] Bronze — Load CSV dari Adel...")
+        t = time.time()
+        run_bronze(spark)
+        print(f"  ✓ {time.time()-t:.1f}s\n")
 
-sipd_bronze = (
-    spark.read
-    .option("header", True)
-    .csv(str(SIPD_PATH))
-)
+        # Step 2: Silver
+        print("[Step 2] Silver — Cleaning & Transformasi...")
+        t = time.time()
+        run_silver(spark)
+        print(f"  ✓ {time.time()-t:.1f}s\n")
 
-sentiment_bronze = (
-    spark.read
-    .option("header", True)
-    .csv(str(SENTIMENT_PATH))
-)
+        # Step 3: Join SIPD + Sentimen
+        print("[Step 3] Join — SIPD ⋈ Sentimen Publik...")
+        t = time.time()
+        run_join(spark)
+        print(f"  ✓ {time.time()-t:.1f}s\n")
 
-print("Data SIPD:")
-sipd_bronze.show(truncate=False)
+        # Step 4: Gold
+        print("[Step 4] Gold — Agregasi & Anomaly Flagging...")
+        t = time.time()
+        df_gold, df_summary = run_gold(spark)
+        print(f"  ✓ {time.time()-t:.1f}s\n")
 
-print("Data Sentiment:")
-sentiment_bronze.show(truncate=False)
+        print("=" * 60)
+        print(f"  PIPELINE SELESAI — Total: {time.time()-t_total:.1f}s")
+        print("=" * 60)
 
-# =====================================================
-# SILVER LAYER
-# =====================================================
+        print("\n>>> Distribusi Flag Anomali (Gold):")
+        df_gold.groupBy("flag_anomali").count().orderBy("count", ascending=False).show()
 
-print("\n=== SILVER LAYER ===")
+        print(">>> Top 5 Transaksi Berisiko:")
+        (
+            df_gold
+            .filter(col("flag_anomali") != "NORMAL")
+            .select("id_transaksi","kota","nama_skpd","pagu_anggaran",
+                    "persentase_realisasi","flag_anomali","risk_score")
+            .orderBy(col("risk_score").desc())
+            .show(5, truncate=False)
+        )
 
-sipd_silver = (
-    sipd_bronze
-    .dropDuplicates()
-    .dropna()
-    .withColumn("anggaran", col("anggaran").cast("long"))
-)
+        print(">>> Summary per SKPD (Top Anomali):")
+        df_summary.orderBy(col("jumlah_anomali").desc()).show(8, truncate=False)
 
-print("Data SIPD Clean:")
-sipd_silver.show(truncate=False)
+    finally:
+        spark.stop()
 
-# =====================================================
-# JOIN SIPD + SENTIMENT
-# =====================================================
 
-print("\n=== JOIN DATA ===")
-
-joined_df = (
-    sipd_silver
-    .join(sentiment_bronze, on="id_proyek", how="inner")
-)
-
-joined_df.show(truncate=False)
-
-# =====================================================
-# GOLD LAYER
-# =====================================================
-
-print("\n=== GOLD LAYER ===")
-
-gold_df = (
-    joined_df
-    .groupBy("dinas")
-    .agg(
-        sum("anggaran").alias("total_anggaran"),
-        avg(col("sentiment_score").cast("double")).alias("avg_sentiment"),
-        count("*").alias("jumlah_proyek")
-    )
-)
-
-gold_df.show(truncate=False)
-
-print("\nPIPELINE BERHASIL DIJALANKAN")
-
-spark.stop()
+if __name__ == "__main__":
+    run_pipeline()
