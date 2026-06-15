@@ -1,32 +1,41 @@
-from transformers import pipeline, AutoTokenizer, AutoModel
-import torch
+import pandas as pd
+from transformers import pipeline
+import os
 
-print("=== Bagian 1: Load IndoBERT base model ===")
-tokenizer = AutoTokenizer.from_pretrained("indobenchmark/indobert-base-p1")
-model = AutoModel.from_pretrained("indobenchmark/indobert-base-p1")
-print("IndoBERT base model berhasil di-load.")
-
-sample_text = "Pipa PDAM di MERR bocor lagi, air macet total"
-inputs = tokenizer(sample_text, return_tensors="pt")
-with torch.no_grad():
-    outputs = model(**inputs)
-print(f"Output shape (embedding): {outputs.last_hidden_state.shape}")
-
-print("\n=== Bagian 2: Sentiment Classification ===")
+print("Loading model...")
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
     model="w11wo/indonesian-roberta-base-sentiment-classifier"
 )
 
-test_sentences = [
-    "Pipa PDAM di MERR bocor lagi, air macet total",
-    "Pembangunan jalan baru di Surabaya berjalan lancar dan tepat waktu",
-    "Anggaran untuk perbaikan sekolah tahun ini meningkat signifikan",
-    "Proyek ini terlambat dan menghabiskan dana lebih dari yang seharusnya",
-    "Pelayanan di kantor kelurahan hari ini cukup memuaskan"
+INPUT_PATH = "data/bronze/tweets_berita_raw.csv"
+OUTPUT_PATH = "data/gold/sentiment_results.csv"
+
+print(f"Membaca data dari {INPUT_PATH}...")
+df = pd.read_csv(INPUT_PATH)
+print(f"Total baris: {len(df)}")
+
+def classify(text):
+    result = sentiment_pipeline(str(text), truncation=True)[0]
+    return pd.Series([result['label'], result['score']])
+
+print("Memproses sentiment analysis...")
+df[['Sentimen', 'Confidence']] = df['teks'].apply(classify)
+
+# --- Keyword-based flagging ---
+keywords_red_flag = [
+    "korupsi", "markup", "dugaan", "temuan", "janggal",
+    "ketidaksesuaian", "demo", "menuding", "mengendus", "tangkap"
 ]
 
-for text in test_sentences:
-    result = sentiment_pipeline(text)
-    print(f"Teks: {text}")
-    print(f"  -> Sentimen: {result[0]['label']}, Confidence: {result[0]['score']:.4f}\n")
+def flag_keyword(text):
+    text_lower = str(text).lower()
+    return any(kw in text_lower for kw in keywords_red_flag)
+
+print("Menambahkan keyword flagging...")
+df['flag_anomali_keyword'] = df['teks'].apply(flag_keyword)
+
+os.makedirs("data/gold", exist_ok=True)
+df.to_csv(OUTPUT_PATH, index=False)
+print(f"Selesai. Output disimpan di {OUTPUT_PATH}")
+print(df[['id', 'teks', 'Sentimen', 'Confidence', 'flag_anomali_keyword']])
