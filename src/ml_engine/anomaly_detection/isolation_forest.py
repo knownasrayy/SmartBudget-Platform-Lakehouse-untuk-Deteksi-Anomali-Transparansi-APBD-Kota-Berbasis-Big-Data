@@ -21,6 +21,12 @@ from typing import Optional
 import sys
 import os
 
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from ml_engine.config import (
@@ -28,6 +34,8 @@ from ml_engine.config import (
     IF_CONTAMINATION,
     IF_RANDOM_STATE,
     ML_OUTPUT_DIR,
+    SILVER_DIR,
+    GOLD_DIR,
 )
 
 
@@ -219,17 +227,31 @@ def run_isolation_forest(
         df[["id_transaksi", "if_prediction", "if_score", "if_score_normalized", "if_anomaly"]].to_csv(
             out_path, index=False
         )
-        print(f"\n  Saved → {out_path}")
+        print(f"\n  Saved -> {out_path}")
+
+        # Ekspor hasil prediksi Isolation Forest (kolom tambahan berisi skor anomali dan label Normal/Anomali)
+        # lalu simpan outputnya ke folder data/gold/apbd_scored.csv.
+        df_scored = df.copy()
+        df_scored["anomaly_score"] = df_scored["if_score_normalized"]
+        df_scored["anomaly_label"] = np.where(df_scored["if_anomaly"], "Anomali", "Normal")
+        
+        gold_out_path = GOLD_DIR / "apbd_scored.csv"
+        df_scored.to_csv(gold_out_path, index=False)
+        print(f"  Saved Gold Scored -> {gold_out_path}")
 
     return df
 
 
 if __name__ == "__main__":
-    from ml_engine.data_generator.generate_apbd_synthetic import generate_apbd_data
-
-    df = generate_apbd_data(save=False)
+    # Wajib membaca data APBD bersih dari folder data/silver/ (hasil kerja Dimas)
+    silver_path = SILVER_DIR / "silver_apbd_belanja.csv"
+    if not silver_path.exists():
+        raise FileNotFoundError(f"Data APBD bersih tidak ditemukan di {silver_path}. Jalankan pipeline lakehouse terlebih dahulu.")
+        
+    print(f"Membaca data APBD bersih dari {silver_path}...")
+    df = pd.read_csv(silver_path)
     df = engineer_features(df)
-    df = run_isolation_forest(df)
+    df = run_isolation_forest(df, save=True)
 
     print("\n--- Anomaly vs Ground Truth ---")
     if "is_anomaly_injected" in df.columns:
