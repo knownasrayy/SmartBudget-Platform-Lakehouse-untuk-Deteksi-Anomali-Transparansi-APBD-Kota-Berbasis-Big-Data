@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Analisis Sentimen | SmartAPBD</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sentiment-positive { color: #2e7d32; background-color: #e8f5e9; }
+        .sentiment-negative { color: #d32f2f; background-color: #ffebee; }
+        .sentiment-neutral { color: #ed6c02; background-color: #fff3e0; }
+        
+        /* Custom Gauge Animation */
+        @keyframes gaugeRotate {
+            from { transform: rotate(-90deg); }
+            to { transform: rotate(45deg); } /* Represents 75% */
+        }
+        .gauge-needle {
+            transform-origin: bottom center;
+            animation: gaugeRotate 1.5s ease-out forwards;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-container": "#54a0fe",
+                      "on-primary": "#ffffff",
+                      "primary-fixed": "#e0e0ff",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#f9f9f9",
+                      "tertiary-container": "#303030",
+                      "surface-container-low": "#f3f3f3",
+                      "outline-variant": "#c6c5d4",
+                      "on-secondary-fixed": "#001c3a",
+                      "surface-dim": "#dadada",
+                      "surface": "#f9f9f9",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#1a1c1c",
+                      "tertiary-fixed": "#e4e2e1",
+                      "on-error": "#ffffff",
+                      "inverse-primary": "#bdc2ff",
+                      "tertiary-fixed-dim": "#c8c6c6",
+                      "surface-container": "#eeeeee",
+                      "on-surface-variant": "#454652",
+                      "secondary-fixed-dim": "#a5c8ff",
+                      "primary-fixed-dim": "#bdc2ff",
+                      "on-tertiary-container": "#999897",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#003567",
+                      "on-secondary-fixed-variant": "#004786",
+                      "secondary": "#005faf",
+                      "background": "#f9f9f9",
+                      "on-primary-container": "#8690ee",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e2e2e2",
+                      "on-primary-fixed": "#000767",
+                      "on-background": "#1a1c1c",
+                      "surface-tint": "#4c56af",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#474747",
+                      "inverse-surface": "#2f3131",
+                      "tertiary": "#1b1b1b",
+                      "primary": "#000666",
+                      "on-primary-fixed-variant": "#343d96",
+                      "on-tertiary-fixed": "#1b1c1c",
+                      "primary-container": "#1a237e",
+                      "outline": "#767683",
+                      "surface-container-highest": "#e2e2e2",
+                      "secondary-fixed": "#d4e3ff",
+                      "surface-container-high": "#e8e8e8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "density-default": "8px",
+                      "density-compact": "4px",
+                      "density-comfortable": "16px",
+                      "container-margin-mobile": "16px",
+                      "gutter": "16px",
+                      "container-margin-desktop": "24px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "title-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "title-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                      "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                      "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Top Navigation Bar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim">SmartAPBD</span>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-title-md text-title-md hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors px-2 py-1" href="#">Dashboard</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-title-md text-title-md hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors px-2 py-1" href="#">Heatmap</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary font-title-md text-title-md px-2 py-1" href="#">Analisis Sentimen</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">location_city</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">calendar_today</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">account_circle</button>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- Side Navigation Bar -->
+<aside class="hidden lg:flex flex-col h-screen p-4 border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-tertiary-container w-64 fixed left-0 top-16">
+<div class="mb-8 px-2">
+<h2 class="font-title-lg text-title-lg text-primary font-bold">Administrasi</h2>
+<p class="text-label-sm text-on-surface-variant opacity-70 uppercase tracking-wider">Sistem Transparansi</p>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-active:scale-90 transition-transform">dashboard</span>
+<span class="font-label-lg text-label-lg">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-active:scale-90 transition-transform">bubble_chart</span>
+<span class="font-label-lg text-label-lg">Heatmap Anomali</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-label-lg text-label-lg">Analisis Sentimen</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-active:scale-90 transition-transform">assessment</span>
+<span class="font-label-lg text-label-lg">Laporan BPK</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-64 p-6 bg-surface-bright">
+<div class="max-w-[1440px] mx-auto space-y-6">
+<!-- Header Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Analisis Sentimen Publik</h1>
+<p class="text-body-md text-on-surface-variant">Pemantauan opini publik terhadap alokasi anggaran APBD secara real-time.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-lg text-label-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                            Filter Data
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                            Ekspor Laporan
+                        </button>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Indeks Kepuasan Publik (Gauge Card) -->
+<div class="md:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface-variant self-start mb-4">Indeks Kepuasan Publik</h3>
+<div class="relative w-48 h-48 flex items-center justify-center">
+<!-- Gauge Background -->
+<svg class="w-full h-full transform -rotate-180" viewbox="0 0 100 50">
+<path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e0e0e0" stroke-linecap="round" stroke-width="8"></path>
+<!-- Gauge Active Segment -->
+<path class="stroke-secondary" d="M 10 50 A 40 40 0 0 1 80 18" fill="none" stroke="#005faf" stroke-linecap="round" stroke-width="8"></path>
+</svg>
+<!-- Value Label -->
+<div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+<span class="text-display-lg font-display-lg text-primary leading-none">75.4</span>
+<span class="text-label-md text-secondary font-bold uppercase tracking-widest mt-1">Sangat Baik</span>
+</div>
+</div>
+<p class="text-body-md text-on-surface-variant mt-4">Berdasarkan 12,450 interaksi media sosial &amp; aduan masyarakat minggu ini.</p>
+<div class="flex gap-4 mt-6 w-full border-t border-outline-variant pt-4">
+<div class="flex-1">
+<p class="text-label-sm text-on-surface-variant">Positif</p>
+<p class="text-title-md text-primary">68%</p>
+</div>
+<div class="flex-1 border-x border-outline-variant">
+<p class="text-label-sm text-on-surface-variant">Netral</p>
+<p class="text-title-md text-on-surface-variant">22%</p>
+</div>
+<div class="flex-1">
+<p class="text-label-sm text-on-surface-variant">Negatif</p>
+<p class="text-title-md text-error">10%</p>
+</div>
+</div>
+</div>
+<!-- Sentiment Trend Line Chart -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-md text-title-md text-on-surface-variant">Tren Sentimen (30 Hari Terakhir)</h3>
+<div class="flex gap-2 text-label-md">
+<span class="flex items-center gap-1"><span class="w-3 h-3 bg-secondary rounded-full"></span> Positif</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 bg-error rounded-full"></span> Negatif</span>
+</div>
+</div>
+<div class="relative h-[240px] w-full flex items-end justify-between px-2">
+<!-- Simple Visual Chart Logic -->
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 40%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 55%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">1 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 35%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 62%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">5 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 60%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 30%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">10 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 25%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 75%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">15 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 30%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 85%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">20 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 45%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 65%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">25 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 20%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 90%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">Skr</div>
+</div>
+<!-- SVG Path Overlay for Trend -->
+<svg class="absolute top-0 left-0 w-full h-[220px] pointer-events-none" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M 0 60 Q 25 40 50 70 T 100 20" fill="none" stroke="#005faf" stroke-width="2"></path>
+<path d="M 0 80 Q 25 85 50 50 T 100 70" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Trending Topics / Word Cloud Alternative -->
+<div class="md:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface-variant mb-6">Trending Topics</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-secondary text-on-secondary rounded-full font-label-lg text-label-lg flex items-center gap-2">#PembangunanJalan <span class="bg-on-secondary/20 px-2 py-0.5 rounded text-[10px]">1.2k</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#BeasiswaPrestasi <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">856</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#TransparansiDana <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">642</span></span>
+<span class="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-lg text-label-lg flex items-center gap-2">#KorupsiProyek <span class="bg-on-error-container/10 px-2 py-0.5 rounded text-[10px]">520</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#LampuJalan <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">412</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#SampahKota <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">398</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#RTHJakarta <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">215</span></span>
+</div>
+<div class="mt-8 space-y-4">
+<h4 class="text-label-md font-bold text-on-surface-variant uppercase tracking-widest">Sektor Paling Disorot</h4>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Infrastruktur</span>
+<span class="font-bold">42%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Pendidikan</span>
+<span class="font-bold">28%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Kesehatan</span>
+<span class="font-bold">15%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary-container h-2 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Public Comments Feed -->
+<div class="md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-6 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-on-surface-variant">Umpan Balik Publik Terbaru</h3>
+<div class="flex items-center gap-2 text-label-sm text-secondary font-bold">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                                Live Updates
+                            </div>
+</div>
+<div class="flex-1 overflow-y-auto max-h-[500px] p-0">
+<!-- Comment Item -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">RA</div>
+<div>
+<p class="font-label-lg text-label-lg">Rudi Ardiansyah</p>
+<p class="text-label-sm text-on-surface-variant">5 menit yang lalu via Twitter</p>
+</div>
+</div>
+<span class="sentiment-positive px-2 py-1 rounded text-label-sm font-bold">Positif</span>
+</div>
+<p class="text-body-md pl-11 text-on-surface">Terima kasih Pemprov, jalan di area industri sudah mulai mulus. Mobilitas jadi makin lancar! #PembangunanJalan</p>
+<div class="pl-11 mt-2 flex gap-4">
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 12</button>
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
+</div>
+</div>
+<!-- Comment Item -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">SS</div>
+<div>
+<p class="font-label-lg text-label-lg">Siti Sarah</p>
+<p class="text-label-sm text-on-surface-variant">12 menit yang lalu via Instagram</p>
+</div>
+</div>
+<span class="sentiment-negative px-2 py-1 rounded text-label-sm font-bold">Negatif</span>
+</div>
+<p class="text-body-md pl-11 text-on-surface">Kenapa proyek di taman kota berhenti ya? Padahal sudah dianggarkan besar tahun ini. Tolong audit transparansinya. #KorupsiProyek</p>
+<div class="pl-11 mt-2 flex gap-4">
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 45</button>
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
+</div>
+</div>
+<!-- Comment Item -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">BM</div>
+<div>
+<p class="font-label-lg text-label-lg">Budi Mahendra</p>
+<p class="text-label-sm text-on-surface-variant">25 menit yang lalu via Portal Aduan</p>
+</div>
+</div>
+<span class="sentiment-neutral px-2 py-1 rounded text-label-sm font-bold">Netral</span>
+</div>
+<p class="text-body-md pl-11 text-on-surface">Sekadar usul, mungkin bisa ditambah porsi anggaran untuk beasiswa anak tidak mampu di pinggiran kota. #BeasiswaPrestasi</p>
+<div class="pl-11 mt-2 flex gap-4">
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 3</button>
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
+</div>
+</div>
+<!-- Comment Item -->
+<div class="p-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">AL</div>
+<div>
+<p class="font-label-lg text-label-lg">Ani Larasati</p>
+<p class="text-label-sm text-on-surface-variant">1 jam yang lalu via Twitter</p>
+</div>
+</div>
+<span class="sentiment-positive px-2 py-1 rounded text-label-sm font-bold">Positif</span>
+</div>
+<p class="text-body-md pl-11 text-on-surface">Inovasi smart city makin terasa. Aplikasi ini sangat membantu memantau kinerja pemerintah daerah. Maju terus!</p>
+<div class="pl-11 mt-2 flex gap-4">
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> 8</button>
+<button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
+</div>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low text-center">
+<button class="text-primary font-label-lg text-label-lg hover:underline">Lihat Semua Komentar</button>
+</div>
+</div>
+</div>
+<!-- Footer Summary Information -->
+<div class="bg-primary text-on-primary rounded-xl p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+<div class="z-10 max-w-2xl">
+<h3 class="font-headline-lg text-headline-lg mb-2">Integrasi Media Sosial Aktif</h3>
+<p class="text-body-lg opacity-80 mb-6">AI kami memproses ribuan data dari Twitter, Instagram, dan Portal Aduan Publik setiap hari untuk memberikan Anda insight yang paling akurat tentang keinginan masyarakat.</p>
+<div class="flex flex-wrap gap-4">
+<div class="flex items-center gap-2 bg-on-primary/10 px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-lg">98.2% Accuracy Rate</span>
+</div>
+<div class="flex items-center gap-2 bg-on-primary/10 px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-label-lg">Real-time Processing</span>
+</div>
+</div>
+</div>
+<div class="mt-8 md:mt-0 z-10 flex gap-4">
+<div class="text-center p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 min-w-[120px]">
+<p class="text-display-lg font-display-lg leading-tight">12k+</p>
+<p class="text-label-md opacity-70">Data Hari Ini</p>
+</div>
+<div class="text-center p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 min-w-[120px]">
+<p class="text-display-lg font-display-lg leading-tight">4.5</p>
+<p class="text-label-md opacity-70">Rerata Rating</p>
+</div>
+</div>
+<!-- Background Decoration -->
+<div class="absolute right-0 top-0 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl -mr-24 -mt-24"></div>
+<div class="absolute left-0 bottom-0 w-48 h-48 bg-on-primary-container/10 rounded-full blur-2xl -ml-12 -mb-12"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation (Visible only on small screens) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center h-16 z-50">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant transition-transform active:scale-90">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-sm">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant transition-transform active:scale-90">
+<span class="material-symbols-outlined">bubble_chart</span>
+<span class="text-label-sm">Heatmap</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary transition-transform active:scale-90">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="text-label-sm">Sentimen</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant transition-transform active:scale-90">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-label-sm">Profile</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions and real-time feel
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.bg-surface-container-lowest');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.classList.add('shadow-md');
+                    card.classList.remove('shadow-sm');
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.classList.add('shadow-sm');
+                    card.classList.remove('shadow-md');
+                });
+            });
+
+            // Random blinking effect for the "Live" indicator
+            const liveIndicator = document.querySelector('.material-symbols-outlined.text-\\[16px\\]');
+            setInterval(() => {
+                liveIndicator.classList.add('animate-spin');
+                setTimeout(() => {
+                    liveIndicator.classList.remove('animate-spin');
+                }, 1000);
+            }, 5000);
+        });
+    </script>
+</body></html>

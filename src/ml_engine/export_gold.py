@@ -25,9 +25,9 @@ def export_anomaly_transactions(df: pd.DataFrame) -> pd.DataFrame:
     Hanya kolom yang relevan untuk dashboard.
     """
     export_cols = [
-        "id_transaksi", "tahun_anggaran", "kota", "kode_skpd", "nama_skpd",
-        "kode_rekening", "uraian_belanja", "pagu_anggaran", "realisasi",
-        "persen_realisasi", "nama_vendor", "id_vendor", "tanggal_kontrak",
+        "id_transaksi", "tahun_anggaran", "tahun", "kota", "kode_skpd", "skpd", "nama_skpd",
+        "kode_rekening", "kategori_belanja", "uraian_belanja", "pagu_anggaran", "anggaran", "realisasi",
+        "persen_realisasi", "nama_vendor", "id_vendor", "tanggal_kontrak", "tanggal_input",
         "jenis_pengadaan",
     ]
 
@@ -39,7 +39,7 @@ def export_anomaly_transactions(df: pd.DataFrame) -> pd.DataFrame:
         "ensemble_score", "n_detectors_flagged", "risk_category", "is_flagged",
     ]
 
-    available_cols = export_cols + [c for c in score_cols if c in df.columns]
+    available_cols = [c for c in export_cols + score_cols if c in df.columns]
     gold_df = df[available_cols].copy()
 
     # Sort: highest risk first
@@ -76,9 +76,9 @@ def export_vendor_risk_profile(df_vendors: pd.DataFrame) -> pd.DataFrame:
     if "graph_risk_score" in gold_df.columns:
         gold_df = gold_df.sort_values("graph_risk_score", ascending=False)
 
-    out_path = GOLD_DIR / "gold_vendor_risk_profile.csv"
+    out_path = GOLD_DIR / "gold_jejaring_vendor.csv"
     gold_df.to_csv(out_path, index=False)
-    print(f"  [Gold] Vendor risk profiles → {out_path} ({len(gold_df)} rows)")
+    print(f"  [Gold] Vendor networks → {out_path} ({len(gold_df)} rows)")
 
     return gold_df
 

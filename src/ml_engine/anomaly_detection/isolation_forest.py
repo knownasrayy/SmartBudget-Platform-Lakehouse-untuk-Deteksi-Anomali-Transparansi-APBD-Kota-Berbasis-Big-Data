@@ -95,7 +95,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         s = str(int(x))
         return len(s) - len(s.rstrip("0"))
 
+    df["realisasi"] = df["realisasi"].fillna(0)
     df["trailing_zeros_realisasi"] = df["realisasi"].apply(count_trailing_zeros)
+    df["pagu_anggaran"] = df["pagu_anggaran"].fillna(0)
     df["trailing_zeros_pagu"] = df["pagu_anggaran"].apply(count_trailing_zeros)
 
     # ---- Vendor features ----

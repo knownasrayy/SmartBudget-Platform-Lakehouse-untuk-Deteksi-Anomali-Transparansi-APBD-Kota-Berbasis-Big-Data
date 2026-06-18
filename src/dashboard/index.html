@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SmartAPBD - Dashboard Utama</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="assets/css/style.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Leaflet.js for real maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="assets/js/tailwind-config.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
+<!-- SideNavBar Integration -->
+<aside class="flex flex-col h-screen p-4 border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-tertiary-container h-full w-56 fixed left-0 top-0 z-40">
+<div class="mb-8 px-2">
+<h1 class="font-title-lg text-title-lg text-primary">Administrasi</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Sistem Transparansi</p>
+</div>
+<nav class="flex flex-col gap-1">
+
+    <a href="#" onclick="switchTab('dashboard_utama', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg transition-all translate-x-1" data-id="dashboard_utama">
+        <span class="material-symbols-outlined sidebar-active icon-elem" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+        <span class="font-label-lg text-label-lg">Dashboard Utama</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('heatmap_anomali', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="heatmap_anomali">
+        <span class="material-symbols-outlined  icon-elem" >bubble_chart</span>
+        <span class="font-label-lg text-label-lg">Heatmap Anomali</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('analisis_sentimen', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="analisis_sentimen">
+        <span class="material-symbols-outlined  icon-elem" >psychology</span>
+        <span class="font-label-lg text-label-lg">Analisis Sentimen</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('laporan_bpk', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="laporan_bpk">
+        <span class="material-symbols-outlined  icon-elem" >assessment</span>
+        <span class="font-label-lg text-label-lg">Laporan BPK</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('detail_anomali', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="detail_anomali">
+        <span class="material-symbols-outlined  icon-elem" >search</span>
+        <span class="font-label-lg text-label-lg">Detail Anomali</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('peta_spasial', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="peta_spasial">
+        <span class="material-symbols-outlined  icon-elem" >map</span>
+        <span class="font-label-lg text-label-lg">Peta Spasial</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('jejaring_entitas', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="jejaring_entitas">
+        <span class="material-symbols-outlined  icon-elem" >hub</span>
+        <span class="font-label-lg text-label-lg">Jejaring Entitas</span>
+    </a>
+    
+    <a href="#" onclick="switchTab('framework', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg" data-id="framework">
+        <span class="material-symbols-outlined  icon-elem" >account_balance</span>
+        <span class="font-label-lg text-label-lg">Framework</span>
+    </a>
+    </nav>
+<div class="mt-auto p-4 bg-surface-container rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg font-bold">Admin Utama</p>
+<p class="text-[10px] uppercase tracking-wider text-outline">BAPPEDA PROV</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-56 flex flex-col h-screen overflow-y-auto">
+<div id="tab-content-dashboard_utama" class="tab-pane" style="display: block; width: 100%; height: 100%;">
+
+<!-- TopNavBar Integration -->
+<header class="flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim">SmartAPBD</span>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+<span class="font-label-lg text-label-lg">Kota Surabaya</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button onclick="alert('Konfigurasi tidak aktif di Mode Simulasi.')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">location_city</span>
+</button>
+<button onclick="alert('Konfigurasi tidak aktif di Mode Simulasi.')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">calendar_today</span>
+</button>
+<div onclick="alert('Profil Pengguna')" class="h-8 w-8 rounded-full bg-surface-variant flex items-center justify-center cursor-pointer hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="p-container-margin-desktop space-y-6 max-w-[1440px] mx-auto w-full">
+<!-- Welcome Header -->
+<section class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Dashboard Utama</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Pemantauan real-time integritas dan realisasi anggaran.</p>
+</div>
+<div class="flex gap-2">
+<button onclick="window.print()" class="px-4 py-2 bg-surface-container-highest text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span> Unduh PDF
+                    </button>
+<button onclick="location.reload()" class="px-4 py-2 bg-primary text-on-primary rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">sync</span> Refresh Data
+                    </button>
+</div>
+</section>
+<!-- Top Row: KPI Cards -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- KPI 1: Total Anggaran -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col justify-between group hover:shadow-lg transition-shadow">
+<div class="flex justify-between items-start">
+<div class="p-3 bg-primary-fixed rounded-lg text-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-green-600 font-label-sm text-label-sm flex items-center bg-green-50 px-2 py-1 rounded-full">
+                            +2.4% vs 2023
+                        </span>
+</div>
+<div class="mt-4">
+<p class="font-label-lg text-label-lg text-on-surface-variant">Total Anggaran (2024)</p>
+<h3 id="kpi-total-anggaran" class="font-headline-lg text-headline-lg text-primary">Rp 45.2 Triliun</h3>
+</div>
+</div>
+<!-- KPI 2: Pos Belanja Janggal -->
+<div class="bg-error-container p-6 rounded-xl border border-red-200 flex flex-col justify-between group hover:shadow-lg transition-shadow">
+<div class="flex justify-between items-start">
+<div class="p-3 bg-error text-on-error rounded-lg">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="text-error font-label-sm text-label-sm flex items-center bg-white/50 px-2 py-1 rounded-full font-bold">
+                            Tinggi
+                        </span>
+</div>
+<div class="mt-4">
+<p class="font-label-lg text-label-lg text-on-error-container/70">Pos Belanja Janggal</p>
+<h3 id="kpi-anomali-count" class="font-headline-lg text-headline-lg text-on-error-container">127 Item</h3>
+</div>
+</div>
+<!-- KPI 3: Sentimen Publik -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col justify-between group hover:shadow-lg transition-shadow">
+<div class="flex justify-between items-start">
+<div class="p-3 bg-secondary-fixed rounded-lg text-secondary">
+<span class="material-symbols-outlined">forum</span>
+</div>
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-red-400 border-2 border-white"></div>
+<div class="w-6 h-6 rounded-full bg-amber-400 border-2 border-white"></div>
+<div class="w-6 h-6 rounded-full bg-gray-400 border-2 border-white"></div>
+</div>
+</div>
+<div class="mt-4">
+<p class="font-label-lg text-label-lg text-on-surface-variant">Sentimen Publik</p>
+<h3 id="kpi-sentimen" class="font-headline-lg text-headline-lg text-on-surface">72% <span class="text-title-md font-normal text-on-surface-variant">Netral/Negatif</span></h3>
+</div>
+</div>
+</section>
+<!-- Middle Row: Visualizations -->
+<section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+<!-- Heatmap Anomali -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-title-md text-title-md">Heatmap Anomali Wilayah</h4>
+<span class="material-symbols-outlined text-outline cursor-pointer">more_vert</span>
+</div>
+<div class="relative flex-1 rounded-lg overflow-hidden min-h-[300px]">
+<div id="mini-map" style="width:100%; height:300px; min-height:300px; border-radius:8px; z-index:1;"></div>
+</div>
+</div>
+<!-- Time-series Realisasi -->
+<div class="lg:col-span-3 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-title-md text-title-md">Time-series Realisasi Anggaran</h4>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-primary rounded-full"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Alokasi</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-secondary-container rounded-full"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Realisasi</span>
+</div>
+</div>
+</div>
+<div id="time-series-container" class="h-[300px] flex items-end justify-between px-4 pb-8 border-b border-outline-variant gap-4"></div>
+<div class="mt-4 flex justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Total Realisasi: <strong id="ts-total-realisasi">-</strong></span>
+<span>Sisa Pagu: <strong id="ts-sisa-pagu">-</strong></span>
+</div>
+</div>
+</section>
+<!-- Bottom Row: Data Table -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center">
+<h4 class="font-title-md text-title-md">Tabel Pos Belanja Janggal</h4>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input id="search-utama" class="pl-10 pr-4 py-2 border border-outline-variant rounded-full text-label-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Cari pos belanja..." type="text"/>
+</div>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low">
+<tr>
+<th onclick="sortAnomalyTable('uraian_belanja')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Pos Belanja <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th onclick="sortAnomalyTable('jenis_pengadaan')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Kategori <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th onclick="sortAnomalyTable('realisasi')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-right cursor-pointer hover:text-primary select-none">Nominal <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th onclick="sortAnomalyTable('zscore_per_rekening')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-center cursor-pointer hover:text-primary select-none">Z-Score <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th onclick="sortAnomalyTable('anomaly_score')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Status <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-center">Aksi</th>
+</tr>
+</thead>
+<tbody id="tabel-anomali-body" class="divide-y divide-outline-variant">
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-low flex items-center justify-between">
+<p id="anomaly-pagination-info" class="text-label-md text-on-surface-variant">Memuat data anomali...</p>
+<div class="flex gap-1">
+<button onclick="prevAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button onclick="nextAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="mt-auto p-6 border-t border-outline-variant flex justify-between items-center text-on-surface-variant text-label-sm">
+<p>© 2025 SmartAPBD - Sistem Transparansi Anggaran Berbasis AI</p>
+<div class="flex gap-4">
+<a class="hover:text-primary transition-colors" href="#">Kebijakan Privasi</a>
+<a class="hover:text-primary transition-colors" href="#">Bantuan</a>
+<a class="hover:text-primary transition-colors" href="#">Log Audit</a>
+</div>
+</footer>
+</div>
+<div id="tab-content-heatmap_anomali" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+<div class="flex w-full h-full">
+<!-- Left Sidebar Filters -->
+<div class="w-64 bg-surface-container-low border-r border-outline-variant p-5 flex flex-col gap-6 overflow-y-auto">
+<section>
+<h3 class="font-title-md text-title-md text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                        Filter Wilayah
+                    </h3>
+<div class="space-y-4">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2 block">Kategori Belanja</label>
+<div class="space-y-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input type="checkbox" checked value="Honorarium" class="hm-filter-kategori rounded border-outline text-primary focus:ring-primary w-4 h-4"/>
+<span class="font-body-md text-body-md group-hover:text-primary transition-colors">Honorarium</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input type="checkbox" checked value="Belanja Modal" class="hm-filter-kategori rounded border-outline text-primary focus:ring-primary w-4 h-4"/>
+<span class="font-body-md text-body-md group-hover:text-primary transition-colors">Belanja Modal</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input type="checkbox" checked value="Perjalanan Dinas" class="hm-filter-kategori rounded border-outline text-primary focus:ring-primary w-4 h-4"/>
+<span class="font-body-md text-body-md group-hover:text-primary transition-colors">Perjalanan Dinas</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input type="checkbox" checked value="Hibah & Bansos" class="hm-filter-kategori rounded border-outline text-primary focus:ring-primary w-4 h-4"/>
+<span class="font-body-md text-body-md group-hover:text-primary transition-colors">Hibah &amp; Bansos</span>
+</label>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2 block">Level Anomali</label>
+<div class="grid grid-cols-1 gap-2">
+<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-error rounded-lg text-error font-label-lg">
+<span class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                                        High (Kritis)
+                                    </span>
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+</button>
+<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-outline rounded-lg text-on-surface font-label-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+<span class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Medium (Waspada)
+                                    </span>
+</button>
+<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-outline rounded-lg text-on-surface font-label-lg hover:border-secondary hover:text-secondary transition-colors">
+<span class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                        Low (Normal)
+                                    </span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="mt-auto">
+<div class="p-4 bg-primary text-on-primary rounded-xl">
+<p class="font-label-sm text-label-sm opacity-80 mb-1">Total Anomali Terdeteksi</p>
+<p class="font-headline-lg text-headline-lg" id="heatmap-anomali-total">-</p>
+<p class="font-label-sm text-label-sm mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                            +12% dari bulan lalu
+                        </p>
+</div>
+</section>
+</div>
+<!-- Central Content: Heatmap & Grid -->
+<div class="flex-1 flex flex-col bg-surface overflow-hidden relative">
+<!-- Toolbar -->
+<div class="px-6 py-4 flex items-center justify-between bg-white/50 backdrop-blur-md border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-high p-1 rounded-lg flex">
+<button id="btn-hm-map" onclick="toggleHeatmapView('map')" class="px-4 py-1.5 bg-white shadow-sm rounded-md font-label-lg text-label-lg text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">map</span>
+                                Map View
+                            </button>
+<button id="btn-hm-grid" onclick="toggleHeatmapView('grid')" class="px-4 py-1.5 font-label-lg text-label-lg text-on-surface-variant flex items-center gap-2 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+                                Grid View
+                            </button>
+</div>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant font-label-md">
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-error"></span> &gt; Rp 500jt</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-amber-500"></span> Rp 100-500jt</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-secondary"></span> &lt; Rp 100jt</span>
+</div>
+</div>
+<!-- Interactive Visualization Canvas -->
+<div class="flex-1 relative overflow-hidden bg-[#e5e7eb]">
+<!-- Real Leaflet Heatmap -->
+<div id="heatmap-main-map" style="width:100%; height:100%; min-height:500px; z-index:1; display:block;"></div>
+<!-- Grid View Table (Hidden initially) -->
+<div id="heatmap-grid-view" class="absolute inset-0 bg-surface overflow-auto p-6 z-10" style="display:none;">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant font-label-md text-on-surface-variant">
+<th class="p-4">Kecamatan</th>
+<th class="p-4">Status</th>
+<th class="p-4">Kategori</th>
+<th class="p-4 text-right">Skor Anomali</th>
+</tr>
+</thead>
+<tbody id="heatmap-grid-tbody" class="divide-y divide-outline-variant font-body-md text-on-surface">
+<!-- Populated by JS -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- Legend Floating Card -->
+<div id="heatmap-legend-card" class="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-4 rounded-xl border border-outline-variant shadow-lg max-w-xs z-[1000] pointer-events-none">
+<h4 class="font-label-lg text-label-lg font-bold mb-2">Metodologi Deteksi</h4>
+<p class="text-[12px] text-on-surface-variant leading-relaxed">
+                            Anomali dihitung berdasarkan deviasi statistik dari standar satuan harga (SSH) dan pagu anggaran historis menggunakan algoritma Machine Learning.
+                        </p>
+</div>
+</div>
+</div>
+
+<!-- Right Sidebar: Top 5 Districts -->
+<div class="w-72 bg-surface-container-low border-l border-outline-variant p-5 flex flex-col gap-5 overflow-y-auto">
+<div>
+<h3 class="font-title-md text-title-md text-primary mb-1">Top 5 SKPD Berisiko</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Berdasarkan akumulasi nilai anomali</p>
+</div>
+<div id="top-5-wilayah-kritis" class="space-y-4">
+<!-- Rank 1 -->
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-error/30 hover:border-error transition-colors cursor-pointer group">
+<div class="flex items-center justify-between mb-3">
+<span class="w-6 h-6 rounded bg-error text-on-error flex items-center justify-center font-bold text-xs">01</span>
+<span class="material-symbols-outlined text-error text-[20px]">warning</span>
+</div>
+<h4 class="font-title-md text-title-md mb-1">Rungkut</h4>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Belanja Modal</span>
+<span class="font-bold text-error">Rp 12.4M</span>
+</div>
+<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full w-[92%]"></div>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-amber-500 transition-colors cursor-pointer group">
+<div class="flex items-center justify-between mb-3">
+<span class="w-6 h-6 rounded bg-amber-500 text-white flex items-center justify-center font-bold text-xs">02</span>
+<span class="material-symbols-outlined text-amber-500 text-[20px]">report</span>
+</div>
+<h4 class="font-title-md text-title-md mb-1">Wonokromo</h4>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Honorarium</span>
+<span class="font-bold text-amber-600">Rp 8.1M</span>
+</div>
+<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+<div class="bg-amber-500 h-full rounded-full w-[78%]"></div>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<div class="flex items-center justify-between mb-3">
+<span class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-xs">03</span>
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+</div>
+<h4 class="font-title-md text-title-md mb-1">Tegalsari</h4>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bansos</span>
+<span class="font-bold text-on-surface">Rp 5.2M</span>
+</div>
+<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-[64%]"></div>
+</div>
+</div>
+<!-- Rank 4 -->
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<div class="flex items-center justify-between mb-3">
+<span class="w-6 h-6 rounded bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-xs">04</span>
+</div>
+<h4 class="font-title-md text-title-md mb-1">Gubeng</h4>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Belanja Jasa</span>
+<span class="font-bold text-on-surface">Rp 4.9M</span>
+</div>
+<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-[52%]"></div>
+</div>
+</div>
+<!-- Rank 5 -->
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<div class="flex items-center justify-between mb-3">
+<span class="w-6 h-6 rounded bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-xs">05</span>
+</div>
+<h4 class="font-title-md text-title-md mb-1">Sukolilo</h4>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pemeliharaan</span>
+<span class="font-bold text-on-surface">Rp 3.7M</span>
+</div>
+<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-[41%]"></div>
+</div>
+</div>
+</div>
+<button class="mt-4 w-full py-3 bg-surface-container-high border border-outline-variant rounded-xl font-label-lg text-label-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+                    Lihat Selengkapnya
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div><!-- end tab-content-heatmap_anomali -->
+<div id="tab-content-analisis_sentimen" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+
+
+<div class="max-w-[1440px] mx-auto space-y-6">
+<!-- Header Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Analisis Sentimen Publik</h1>
+<p class="text-body-md text-on-surface-variant">Pemantauan opini publik terhadap alokasi anggaran APBD secara real-time.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-lg text-label-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                            Filter Data
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                            Ekspor Laporan
+                        </button>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Indeks Kepuasan Publik (Gauge Card) -->
+<div class="md:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface-variant self-start mb-4">Indeks Kepuasan Publik</h3>
+<div class="relative w-48 h-24 flex items-center justify-center mt-2 mb-6">
+<!-- Gauge Background -->
+<svg class="w-full h-full" viewbox="0 0 100 50">
+<path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e0e0e0" stroke-linecap="round" stroke-width="8"></path>
+<!-- Gauge Active Segment -->
+<path id="sentiment-gauge-arc" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#005faf" stroke-linecap="round" stroke-width="8" stroke-dasharray="126" stroke-dashoffset="126" style="transition: stroke-dashoffset 1s ease-out;"></path>
+</svg>
+<!-- Value Label -->
+<div class="absolute inset-0 flex flex-col items-center justify-end pb-1 translate-y-3">
+<span id="sentiment-gauge-value" class="text-display-sm font-bold text-primary leading-none">-</span>
+<span id="sentiment-gauge-label" class="text-label-md text-secondary font-bold uppercase tracking-widest mt-1">Menghitung...</span>
+</div>
+</div>
+<p id="sentiment-interaction-text" class="text-body-md text-on-surface-variant mt-4">Berdasarkan 0 interaksi media sosial & aduan masyarakat minggu ini.</p>
+<div class="flex gap-4 mt-6 w-full border-t border-outline-variant pt-4">
+<div class="flex-1">
+<p class="text-label-sm text-on-surface-variant">Positif</p>
+<p id="sentiment-positif-pct" class="text-title-md text-primary">-</p>
+</div>
+<div class="flex-1 border-x border-outline-variant">
+<p class="text-label-sm text-on-surface-variant">Netral</p>
+<p id="sentiment-netral-pct" class="text-title-md text-on-surface-variant">-</p>
+</div>
+<div class="flex-1">
+<p class="text-label-sm text-on-surface-variant">Negatif</p>
+<p id="sentiment-negatif-pct" class="text-title-md text-error">-</p>
+</div>
+</div>
+</div>
+<!-- Sentiment Trend Line Chart -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-md text-title-md text-on-surface-variant">Tren Sentimen (30 Hari Terakhir)</h3>
+<div class="flex gap-2 text-label-md">
+<span class="flex items-center gap-1"><span class="w-3 h-3 bg-secondary rounded-full"></span> Positif</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 bg-error rounded-full"></span> Negatif</span>
+</div>
+</div>
+<div class="relative h-[240px] w-full flex items-end justify-between px-2">
+<!-- Simple Visual Chart Logic -->
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 40%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 55%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">1 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 35%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 62%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">5 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 60%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 30%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">10 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 25%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 75%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">15 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 30%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 85%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">20 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 45%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 65%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">25 Okt</div>
+</div>
+<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
+<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 20%"></div>
+<div class="bg-secondary w-full rounded-t-sm" style="height: 90%"></div>
+<div class="text-label-sm text-center mt-2 opacity-50">Skr</div>
+</div>
+<!-- SVG Path Overlay for Trend -->
+<svg class="absolute top-0 left-0 w-full h-[220px] pointer-events-none" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M 0 60 Q 25 40 50 70 T 100 20" fill="none" stroke="#005faf" stroke-width="2"></path>
+<path d="M 0 80 Q 25 85 50 50 T 100 70" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Trending Topics / Word Cloud Alternative -->
+<div class="md:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface-variant mb-6">Trending Topics</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-secondary text-on-secondary rounded-full font-label-lg text-label-lg flex items-center gap-2">#PembangunanJalan <span class="bg-on-secondary/20 px-2 py-0.5 rounded text-[10px]">1.2k</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#BeasiswaPrestasi <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">856</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#TransparansiDana <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">642</span></span>
+<span class="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-lg text-label-lg flex items-center gap-2">#KorupsiProyek <span class="bg-on-error-container/10 px-2 py-0.5 rounded text-[10px]">520</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#LampuJalan <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">412</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#SampahKota <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">398</span></span>
+<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#RTHSurabaya <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">215</span></span>
+</div>
+<div class="mt-8 space-y-4">
+<h4 class="text-label-md font-bold text-on-surface-variant uppercase tracking-widest">Sektor Paling Disorot</h4>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Infrastruktur</span>
+<span class="font-bold">42%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Pendidikan</span>
+<span class="font-bold">28%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-md mb-1">
+<span>Kesehatan</span>
+<span class="font-bold">15%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary-container h-2 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Public Comments Feed -->
+<div class="md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-6 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-on-surface-variant">Umpan Balik Publik Terbaru</h3>
+<div class="flex items-center gap-2 text-label-sm text-secondary font-bold">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                                Live Updates
+                            </div>
+</div>
+<div id="sentiment-feed-container" class="flex-1 overflow-y-auto max-h-[500px] p-0">
+    <div class="p-8 text-center text-on-surface-variant flex flex-col items-center justify-center">
+        <span class="material-symbols-outlined text-[32px] animate-spin mb-2">sync</span>
+        <p>Memuat umpan balik publik dari YouTube & GNews...</p>
+    </div>
+</div>
+<div class="p-4 bg-surface-container-low text-center">
+<button class="text-primary font-label-lg text-label-lg hover:underline">Lihat Semua Komentar</button>
+</div>
+</div>
+</div>
+<!-- Footer Summary Information -->
+<div class="bg-primary text-on-primary rounded-xl p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+<div class="z-10 max-w-2xl">
+<h3 class="font-headline-lg text-headline-lg mb-2">Integrasi Publik Aktif</h3>
+<p class="text-body-lg opacity-80 mb-6">Sistem kini menyedot opini publik secara langsung (Real-Time API) dari <b>YouTube Data API v3</b> dan <b>GNews API</b> untuk memantau sentimen masyarakat secara akurat.</p>
+<div class="flex flex-wrap gap-4">
+<div class="flex items-center gap-2 bg-on-primary/10 px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-lg">98.2% Accuracy Rate</span>
+</div>
+<div class="flex items-center gap-2 bg-on-primary/10 px-4 py-2 rounded-lg">
+<span class="material-symbols-outlined">bolt</span>
+<span class="font-label-lg">Real-time Processing</span>
+</div>
+</div>
+</div>
+<div class="mt-8 md:mt-0 z-10 flex gap-4">
+<div class="text-center p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 min-w-[120px]">
+<p class="text-display-lg font-display-lg leading-tight">12k+</p>
+<p class="text-label-md opacity-70">Data Hari Ini</p>
+</div>
+<div class="text-center p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 min-w-[120px]">
+<p class="text-display-lg font-display-lg leading-tight">4.5</p>
+<p class="text-label-md opacity-70">Rerata Rating</p>
+</div>
+</div>
+<!-- Background Decoration -->
+<div class="absolute right-0 top-0 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl -mr-24 -mt-24"></div>
+<div class="absolute left-0 bottom-0 w-48 h-48 bg-on-primary-container/10 rounded-full blur-2xl -ml-12 -mb-12"></div>
+</div>
+</div>
+</div>
+<div id="tab-content-laporan_bpk" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+<!-- Header Section -->
+<header class="p-8 pb-4 border-b border-outline-variant flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+    <h1 class="font-headline-lg text-headline-lg text-primary">Laporan Audit BPK</h1>
+    <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-full font-label-sm border border-amber-200">Mode MVP</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Dokumen formal hasil audit Badan Pemeriksa Keuangan (BPK) untuk pengawasan transparansi dan kepatuhan APBD.</p>
+</div>
+<div class="flex gap-3">
+<button id="bpk-btn-export" onclick="exportBPK()" class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest border border-outline text-primary rounded-xl font-label-lg hover:bg-surface-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">download</span> Ekspor Rekap
+                    </button>
+<button id="bpk-btn-filter" onclick="filterBPK()" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl font-label-lg hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-[20px]">filter_list</span> Terapkan Filter
+                    </button>
+</div>
+</header>
+
+<div class="p-8 overflow-y-auto" style="height: calc(100vh - 120px);">
+<!-- Summary Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col justify-between shadow-sm">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Total Temuan Aktif</p>
+<h3 class="font-display-lg text-[40px] font-bold text-error leading-none">128</h3>
+<p class="font-label-sm text-label-sm text-error mt-3 flex items-center gap-1 bg-error/10 w-max px-2 py-1 rounded-md">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +12% dari 2022
+</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col justify-between shadow-sm">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Tingkat Penyelesaian (TLHP)</p>
+<h3 class="font-display-lg text-[40px] font-bold text-secondary leading-none">84%</h3>
+<div class="w-full bg-surface-container h-2 rounded-full mt-4 overflow-hidden">
+<div class="bg-secondary h-full rounded-full w-[84%]"></div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2">682 dari 812 rekomendasi tuntas</p>
+</div>
+</div>
+<div class="bg-primary p-6 rounded-2xl text-on-primary shadow-sm flex flex-col justify-between bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative overflow-hidden">
+<div class="relative z-10">
+<p class="font-label-md text-label-md text-primary-fixed-dim uppercase tracking-wider mb-2">Opini Audit Terakhir</p>
+<h3 class="font-display-lg text-[40px] font-bold leading-none">WTP</h3>
+<p class="font-label-md text-label-md text-secondary-fixed mt-3">Wajar Tanpa Pengecualian (5 Tahun Beruntun)</p>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] opacity-20" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+</section>
+
+<!-- Filter and List -->
+<section class="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+<div class="p-5 border-b border-outline-variant flex flex-col md:flex-row gap-4 items-center bg-surface-container-low/50">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input id="bpk-search" class="w-full pl-12 pr-4 py-2.5 bg-white border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-body-md" placeholder="Cari berdasarkan judul dokumen atau entitas..." type="text"/>
+</div>
+<div class="flex gap-3 w-full md:w-auto">
+<select id="bpk-filter-tahun" class="bg-white border border-outline-variant rounded-xl px-4 py-2.5 font-label-lg focus:outline-none focus:ring-2 focus:ring-primary/20">
+<option value="all">Semua Tahun</option>
+<option value="2023">2023</option>
+<option value="2022">2022</option>
+<option value="2021">2021</option>
+</select>
+<select id="bpk-filter-auditor" class="bg-white border border-outline-variant rounded-xl px-4 py-2.5 font-label-lg focus:outline-none focus:ring-2 focus:ring-primary/20">
+<option value="all">Semua Auditor</option>
+<option value="BPK RI Perwakilan Jabar">BPK Perwakilan</option>
+<option value="BPK Pusat">BPK Pusat</option>
+<option value="Tim Audit Investigasi">Tim Investigasi</option>
+</select>
+</div>
+</div>
+
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse" id="bpk-table">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant font-label-md text-on-surface-variant uppercase tracking-wider">
+<th class="p-5 font-medium">Dokumen Laporan</th>
+<th class="p-5 font-medium">Auditor Utama</th>
+<th class="p-5 font-medium text-center">Tahun</th>
+<th class="p-5 font-medium text-center">Status Temuan</th>
+<th class="p-5 font-medium text-right">Aksi</th>
+</tr>
+</thead>
+<tbody id="bpk-tbody" class="divide-y divide-outline-variant font-body-md">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group" data-tahun="2023" data-auditor="BPK RI Perwakilan Jabar" data-title="LHP BPK LKPD Prov. Jawa Barat TA 2023">
+<td class="p-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-12 bg-error/10 text-error rounded border border-error/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface mb-0.5">LHP BPK LKPD Prov. Jawa Barat TA 2023</h4>
+<p class="font-label-sm text-on-surface-variant">12.4 MB • Diunggah 14 Mei 2024</p>
+</div>
+</div>
+</td>
+<td class="p-5 text-on-surface-variant">BPK RI Perwakilan Jabar</td>
+<td class="p-5 text-center font-medium">2023</td>
+<td class="p-5 text-center">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-error/10 text-error rounded-full font-label-sm border border-error/20">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 18 Temuan
+</span>
+</td>
+<td class="p-5">
+<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button title="Unduh PDF" class="w-9 h-9 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<button title="Lihat Detail" class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-lg text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">open_in_new</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group" data-tahun="2023" data-auditor="BPK Pusat" data-title="Laporan Kinerja Instansi Pemerintah (LKjIP)">
+<td class="p-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-12 bg-secondary/10 text-secondary rounded border border-secondary/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">description</span>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface mb-0.5">Laporan Kinerja Instansi Pemerintah (LKjIP)</h4>
+<p class="font-label-sm text-on-surface-variant">8.1 MB • Diunggah 02 Jan 2024</p>
+</div>
+</div>
+</td>
+<td class="p-5 text-on-surface-variant">BPK Pusat</td>
+<td class="p-5 text-center font-medium">2023</td>
+<td class="p-5 text-center">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-highest text-on-surface rounded-full font-label-sm border border-outline-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> 4 Temuan (Tuntas)
+</span>
+</td>
+<td class="p-5">
+<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button title="Unduh PDF" class="w-9 h-9 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<button title="Lihat Detail" class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-lg text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">open_in_new</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group" data-tahun="2022" data-auditor="Tim Audit Investigasi" data-title="Audit Khusus Pengadaan Barang & Jasa TA 2022">
+<td class="p-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-12 bg-error/10 text-error rounded border border-error/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">policy</span>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface mb-0.5">Audit Khusus Pengadaan Barang & Jasa</h4>
+<p class="font-label-sm text-on-surface-variant">15.7 MB • Diunggah 18 Nov 2023</p>
+</div>
+</div>
+</td>
+<td class="p-5 text-on-surface-variant">Tim Audit Investigasi</td>
+<td class="p-5 text-center font-medium">2022</td>
+<td class="p-5 text-center">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-error/10 text-error rounded-full font-label-sm border border-error/20">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 31 Temuan (Kritis)
+</span>
+</td>
+<td class="p-5">
+<div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button title="Unduh PDF" class="w-9 h-9 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<button title="Lihat Detail" class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-lg text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">open_in_new</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Empty State -->
+<div id="bpk-empty" class="hidden py-12 flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-[48px] text-outline mb-4">search_off</span>
+<h4 class="font-title-md text-on-surface mb-1">Tidak Ada Laporan Ditemukan</h4>
+<p class="font-body-md text-on-surface-variant">Silakan sesuaikan kriteria filter atau kata kunci pencarian Anda.</p>
+</div>
+</div>
+</section>
+
+</div>
+</div>
+<div id="tab-content-detail_anomali" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+
+<!-- TopNavBar Integration -->
+  <header class="flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline">
+      <div class="flex items-center gap-4">
+          <span class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim">Investigasi Forensik</span>
+          <div class="h-6 w-px bg-outline-variant mx-2"></div>
+          <div class="flex items-center gap-1 text-on-surface-variant">
+              <span class="material-symbols-outlined text-[20px]">gavel</span>
+              <span class="font-label-lg text-label-lg" id="detail-id-header">TRX-000000</span>
+          </div>
+      </div>
+      <div class="flex items-center gap-4">
+          <button onclick="alert('Mengekspor laporan investigasi...')" class="px-4 py-2 bg-surface-container-highest text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-outline-variant transition-colors">
+              <span class="material-symbols-outlined text-[18px]">download</span> Unduh Dossier
+          </button>
+      </div>
+  </header>
+
+  <!-- Dashboard Canvas -->
+  <div class="p-container-margin-desktop space-y-6 max-w-[1440px] mx-auto w-full">
+      
+      <!-- Top Row: Overview Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          
+          <div class="bg-error-container p-6 rounded-xl border border-red-200 flex flex-col justify-between group hover:shadow-lg transition-shadow md:col-span-1">
+              <div class="flex justify-between items-start">
+                  <div class="p-3 bg-error text-on-error rounded-lg">
+                      <span class="material-symbols-outlined">warning</span>
+                  </div>
+                  <span class="text-error font-label-sm text-label-sm flex items-center bg-white/50 px-2 py-1 rounded-full font-bold">Status Kritis</span>
+              </div>
+              <div class="mt-4">
+                  <p class="font-label-lg text-label-lg text-on-error-container/70">Skor Z-Score</p>
+                  <h3 id="detail-zscore" class="font-headline-lg text-headline-lg text-on-error-container">-</h3>
+              </div>
+          </div>
+
+          <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col justify-between group hover:shadow-lg transition-shadow md:col-span-3">
+              <h4 class="font-title-md text-title-md mb-4 text-on-surface-variant">Informasi Transaksi</h4>
+              <div class="grid grid-cols-2 gap-4">
+                  <div>
+                      <p class="text-sm text-outline">Kategori Belanja</p>
+                      <p id="detail-kategori" class="font-body-lg text-body-lg font-semibold">-</p>
+                  </div>
+                  <div>
+                      <p class="text-sm text-outline">Nilai Realisasi</p>
+                      <p id="detail-realisasi" class="font-body-lg text-body-lg font-semibold text-primary">-</p>
+                  </div>
+                  <div class="col-span-2">
+                      <p class="text-sm text-outline">Unit Kerja (SKPD)</p>
+                      <p id="detail-skpd" class="font-body-lg text-body-lg font-semibold">Dinas Tidak Diketahui</p>
+                  </div>
+              </div>
+          </div>
+
+      </section>
+
+      <!-- Bottom Row: Timeline & Actions -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant md:col-span-2">
+              <h4 class="font-title-md text-title-md mb-6">Jejak Forensik (Simulasi)</h4>
+              <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-outline-variant before:to-transparent">
+                  <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-error text-on-error shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow">
+                          <span class="material-symbols-outlined text-[18px]">policy</span>
+                      </div>
+                      <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg border border-outline-variant bg-surface-container-lowest shadow-sm">
+                          <div class="flex items-center justify-between space-x-2 mb-1">
+                              <div class="font-bold text-on-surface">Deteksi Anomali</div>
+                              <time class="font-label-sm text-on-surface-variant">Otomatis</time>
+                          </div>
+                          <div class="text-on-surface-variant font-body-sm">Sistem mendeteksi deviasi pengeluaran sangat ekstrem melebihi ambang batas historis.</div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          
+          <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col gap-4">
+              <h4 class="font-title-md text-title-md mb-2">Rekomendasi Tindakan</h4>
+              
+              <button onclick="alert('Melakukan pemblokiran...')" class="w-full py-3 bg-error text-on-error rounded-lg font-label-lg flex justify-center items-center gap-2 hover:opacity-90 transition-opacity">
+                  <span class="material-symbols-outlined">block</span> Bekukan Anggaran
+              </button>
+              
+              <button onclick="alert('Membuka panel audit BPK...')" class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-lg flex justify-center items-center gap-2 hover:opacity-90 transition-opacity">
+                  <span class="material-symbols-outlined">fact_check</span> Eskalasi ke BPK
+              </button>
+
+              <button onclick="switchTab('dashboard_utama', document.querySelector('.nav-item[data-id=\'dashboard_utama\']'))" class="w-full py-3 mt-auto bg-surface-container text-on-surface rounded-lg font-label-lg flex justify-center items-center gap-2 hover:bg-surface-container-highest transition-colors border border-outline-variant">
+                  <span class="material-symbols-outlined">arrow_back</span> Kembali ke Dasbor
+              </button>
+          </div>
+      </section>
+
+  </div>
+</div>
+<div id="tab-content-peta_spasial" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Peta Anomali Regional</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Distribusi spasial risiko anggaran berdasarkan realisasi vs. perencanaan (Q3 2023).</p>
+</div>
+<!-- Filter/Action Bar -->
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-label-lg text-label-lg text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                        Filter Wilayah
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                        Ekspor SHP
+                    </button>
+</div>
+</div>
+<!-- Spatial Visualization Container (The Map) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col h-[600px] relative">
+<!-- Map Toolbar Inner -->
+<div class="h-12 border-b border-outline-variant bg-surface-container-low flex items-center px-4 justify-between z-10">
+<div class="flex gap-2">
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Zoom In">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined text-[20px]" data-icon="remove">remove</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-1 self-center"></div>
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Reset View">
+<span class="material-symbols-outlined text-[20px]" data-icon="my_location">my_location</span>
+</button>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                        Data ter-update: 24 Okt 2023, 14:00 WIB
+                    </div>
+</div>
+<!-- Real Leaflet Choropleth Map -->
+<div id="peta-spasial-map" style="width:100%; height:100%; min-height:500px; z-index:1;"></div>
+<!-- GIS Style Bottom Legend -->
+<div class="absolute bottom-6 right-6 z-[1000] bg-surface-container-lowest rounded-lg border border-outline-variant p-3 shadow-sm w-72">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Indeks Keparahan Anomali</h4>
+<!-- Gradient Bar -->
+<div class="h-3 w-full rounded-full bg-gradient-to-r from-green-200 via-amber-400 to-red-600 border border-outline-variant/50 mb-2"></div>
+<!-- Scale Labels -->
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Aman (Normal)</span>
+<span>Waspada</span>
+<span class="text-error font-medium">Kritis</span>
+</div>
+</div>
+</div>
+
+<!-- Additional Context Data / Bento Grid below map -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+<!-- Summary Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-4">Ringkasan Wilayah</h3>
+<div class="space-y-4">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Total Wilayah Administratif</p>
+<p class="font-headline-lg text-headline-lg text-primary mt-1">31 <span class="font-body-md text-body-md text-on-surface-variant font-normal">Kecamatan</span></p>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5 mb-1">
+<div class="bg-error h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">15% wilayah dalam status kritis (4 Kecamatan)</p>
+</div>
+</div>
+<!-- Actionable Insights Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm md:col-span-2">
+<h3 class="font-title-md text-title-md text-on-surface mb-4">Rekomendasi Tindakan</h3>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant/50">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="warning">warning</span>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Inspeksi Lanjutan Kecamatan Gubeng</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Prioritaskan audit pada pos belanja infrastruktur publik yang menunjukkan deviasi &gt;30% dari standar RKA.</p>
+</div>
+<button class="ml-auto text-primary hover:bg-primary-fixed transition-colors px-3 py-1.5 rounded font-label-md text-label-md">Tinjau</button>
+</li>
+<li class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant/50">
+<span class="material-symbols-outlined text-on-surface-variant mt-0.5" data-icon="policy">policy</span>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Validasi Data Kecamatan Sukolilo</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Terdapat anomali administratif pada laporan triwulan. Diperlukan sinkronisasi ulang data SKPD.</p>
+</div>
+<button class="ml-auto text-primary hover:bg-primary-fixed transition-colors px-3 py-1.5 rounded font-label-md text-label-md">Tinjau</button>
+</li>
+</ul>
+</div>
+</div>
+</div><!-- end tab-content-peta_spasial -->
+
+<div id="tab-content-jejaring_entitas" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+
+<!-- MVP Placeholder Banner -->
+<div class="bg-amber-100 text-amber-800 p-4 mx-6 mt-6 rounded-lg flex items-center gap-3">
+    <span class="material-symbols-outlined">construction</span>
+    <div>
+        <p class="font-bold">Mode MVP (Simulasi)</p>
+        <p class="text-sm">Server Graph Database Neo4j tidak aktif pada environment lokal ini. Visualisasi jaringan entitas ini menggunakan tata letak statis.</p>
+    </div>
+</div>
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Jejaring Entitas &amp; Temuan BPK</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Pemetaan relasi vendor, dinas, dan indikasi konflik kepentingan berdasar data audit.</p>
+</div>
+<!-- Search Bar -->
+<div class="relative w-full md:w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-surface-container-lowest text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" placeholder="Cari Nama Vendor / Dinas..." type="text"/>
+</div>
+</div>
+<!-- Two Column Layout (70/30) -->
+<div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-[600px]">
+<!-- Left Panel: Network Graph Canvas (70%) -->
+<div class="flex-[7] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col relative shadow-sm">
+<!-- Graph Toolbar -->
+<div class="h-12 border-b border-outline-variant flex items-center justify-between px-4 bg-surface-bright z-40 relative">
+<div class="flex gap-2 items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Visualisasi Relasi</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Zoom In"><span class="material-symbols-outlined text-sm">zoom_in</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Zoom Out"><span class="material-symbols-outlined text-sm">zoom_out</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Reset View"><span class="material-symbols-outlined text-sm">fit_screen</span></button>
+</div>
+</div>
+<!-- Canvas Area -->
+<div class="flex-1 relative network-canvas-bg overflow-hidden cursor-move">
+<!-- Simulated Cluster Highlight for High Risk -->
+<div class="cluster-highlight" style="top: 40%; left: 60%; width: 300px; height: 280px; transform: translate(-50%, -50%);"></div>
+<!-- Edges (Simulated with absolute positioning math logic) -->
+<!-- Central to Top Left -->
+<div class="edge-line" style="top: 50%; left: 35%; width: 180px; transform: rotate(-145deg);"></div>
+<!-- Central to Bottom Left -->
+<div class="edge-line" style="top: 50%; left: 35%; width: 150px; transform: rotate(135deg);"></div>
+<!-- Central to Right Cluster (Danger) -->
+<div class="edge-line edge-danger" style="top: 50%; left: 35%; width: 200px; transform: rotate(-15deg);"></div>
+<!-- Central to Right Cluster 2 (Danger) -->
+<div class="edge-line edge-danger" style="top: 50%; left: 35%; width: 220px; transform: rotate(25deg);"></div>
+<!-- Inner Cluster connection -->
+<div class="edge-line edge-danger" style="top: 42%; left: 58%; width: 120px; transform: rotate(70deg);"></div>
+<!-- Nodes -->
+<!-- Main Entity -->
+<div class="node" style="top: 50%; left: 35%;" onclick="selectJejaringNode('Dinas Pekerjaan Umum', 'Instansi Pemerintah', 0, 0, false)">
+<span class="material-symbols-outlined node-icon">account_balance</span>
+<span class="node-label">Dinas Pekerjaan Umum</span>
+</div>
+<!-- Standard Vendors -->
+<div class="node" style="top: 25%; left: 20%;" onclick="selectJejaringNode('PT Bangun Raya', 'Penyedia Pengadaan LPSE', 0, 0, false)">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">PT Bangun Raya</span>
+</div>
+<div class="node" style="top: 70%; left: 22%;" onclick="selectJejaringNode('CV Mitra Abadi', 'Penyedia Pengadaan LPSE', 0, 0, false)">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">CV Mitra Abadi</span>
+</div>
+<!-- High Risk Cluster (Selected) -->
+<div class="node selected" id="jejaring-node-default" style="top: 42%; left: 58%;" onclick="selectJejaringNode('CV Maju Jaya', 'Indikasi Risiko Tinggi', 51900000000, 7, true)">
+<span class="material-symbols-outlined node-icon">warning</span>
+<span class="node-label">CV Maju Jaya</span>
+</div>
+<div class="node" style="top: 60%; left: 62%;" onclick="selectJejaringNode('PT Sinar Mas Jaya', 'Penyedia Pengadaan LPSE', 0, 0, false)">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">PT Sinar Mas Jaya</span>
+</div>
+</div>
+<!-- Graph Legend -->
+<div class="absolute bottom-4 left-4 bg-surface-container-lowest/90 backdrop-blur border border-outline-variant p-3 rounded-lg shadow-sm z-40 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full border border-outline-variant bg-white"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entitas Standar</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full border-2 border-error bg-error-container"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Indikasi Risiko Tinggi</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-8 h-0 border-b border-outline-variant"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Relasi Kontrak</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-8 h-0 border-b-2 border-dashed border-error"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Konflik Kepentingan</span>
+</div>
+</div>
+</div>
+<!-- Right Panel: Entity Profile Sidebar (30%) -->
+<div class="flex-[3] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col">
+<!-- Profile Header -->
+<div class="p-6 border-b border-outline-variant bg-surface-bright flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="w-12 h-12 rounded bg-error-container flex items-center justify-center text-on-error-container flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">business</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface" id="jejaring-vendor-name">Memuat Data...</h3>
+<p class="font-body-md text-body-md text-on-surface-variant" id="jejaring-vendor-type">Penyedia Pengadaan LPSE</p>
+</div>
+<!-- Alert Badge -->
+<div class="bg-error-container text-on-error-container p-3 rounded-lg flex items-start gap-3 border border-error/20">
+<span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold">Indikasi Alamat Fiktif</span>
+<span class="font-label-sm text-label-sm opacity-90 mt-1">Entitas berbagi alamat fisik dengan 3 perusahaan lain yang terafiliasi memenangkan tender yang sama.</span>
+</div>
+</div>
+</div>
+<!-- Profile Body / Stats -->
+<div class="p-6 flex-1 overflow-auto flex flex-col gap-6">
+<!-- Key Stats Block -->
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Total Nilai Proyek</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold" id="jejaring-vendor-value">-</span>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 flex-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Total Kontrak</span>
+<span class="font-title-lg text-title-lg text-on-surface" id="jejaring-vendor-contracts">-</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 flex-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Temuan BPK</span>
+<span class="font-title-lg text-title-lg text-error font-bold">2 Kasus</span>
+</div>
+</div>
+</div>
+<hr class="border-outline-variant"/>
+<!-- Related Documents List -->
+<div class="flex flex-col gap-3">
+<h4 class="font-title-md text-title-md text-on-surface mb-1">Dokumen Terkait</h4>
+<!-- Document Item 1 -->
+<a class="group flex items-start gap-3 p-3 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-colors" href="#">
+<div class="w-10 h-10 rounded bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate group-hover:text-primary transition-colors">LHP_BPK_DinasPU_2023.pdf</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Temuan Kekurangan Volume Pekerjaan</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1 opacity-70">12 Okt 2023 • 2.4 MB</span>
+</div>
+</a>
+<!-- Document Item 2 -->
+<a class="group flex items-start gap-3 p-3 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-colors" href="#">
+<div class="w-10 h-10 rounded bg-surface-container text-on-surface-variant flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">contract</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate group-hover:text-primary transition-colors">Kontrak_014_PU_CV_Maju.pdf</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rehabilitasi Jalan Protokol</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1 opacity-70">05 Mar 2023 • 5.1 MB</span>
+</div>
+</a>
+</div>
+</div>
+<!-- Action Button -->
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest">
+<button class="w-full py-2.5 px-4 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg hover:bg-primary-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">manage_search</span>
+                            Investigasi Lanjut
+                        </button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tab-content-framework" class="tab-pane" style="display: none; width: 100%; height: 100%;">
+<div class="max-w-[1200px] mx-auto p-8 space-y-8">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Framework & Metodologi</h1>
+<p class="text-body-md text-on-surface-variant mt-2">Arsitektur sistem SmartBudget Lakehouse untuk deteksi anomali dan transparansi APBD Kota Surabaya.</p>
+</div>
+
+<!-- Medallion Architecture -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-primary">layers</span> Medallion Architecture (Lakehouse)</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-5 bg-amber-50 border-2 border-amber-300 rounded-xl">
+<div class="flex items-center gap-2 mb-3">
+<span class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm">B</span>
+<h4 class="font-title-md text-amber-800">Bronze Layer</h4>
+</div>
+<p class="text-body-md text-amber-700">Data mentah dari API CKAN Open Data Surabaya. Disimpan tanpa transformasi sebagai sumber kebenaran tunggal.</p>
+<div class="mt-3 text-label-sm text-amber-600">Format: CSV • Sumber: CKAN API</div>
+</div>
+<div class="p-5 bg-slate-50 border-2 border-slate-300 rounded-xl">
+<div class="flex items-center gap-2 mb-3">
+<span class="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center font-bold text-sm">S</span>
+<h4 class="font-title-md text-slate-800">Silver Layer</h4>
+</div>
+<p class="text-body-md text-slate-700">Data yang sudah dibersihkan, dinormalisasi, dan diperkaya dengan fitur turunan (rasio, z-score, log transform).</p>
+<div class="mt-3 text-label-sm text-slate-600">Proses: Pandas • Output: silver_apbd_belanja.csv</div>
+</div>
+<div class="p-5 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
+<div class="flex items-center gap-2 mb-3">
+<span class="w-8 h-8 rounded-full bg-yellow-500 text-white flex items-center justify-center font-bold text-sm">G</span>
+<h4 class="font-title-md text-yellow-800">Gold Layer</h4>
+</div>
+<p class="text-body-md text-yellow-700">Data siap konsumsi dengan skor anomali dari Machine Learning. Langsung disajikan ke dashboard.</p>
+<div class="mt-3 text-label-sm text-yellow-600">Model: Isolation Forest • Output: apbd_scored.csv</div>
+</div>
+</div>
+</div>
+
+<!-- ML Pipeline -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-primary">psychology</span> Pipeline Machine Learning</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-sm flex-shrink-0">1</span>
+<div>
+<h4 class="font-label-lg text-on-surface font-bold">Feature Engineering</h4>
+<p class="text-body-md text-on-surface-variant">Ekstraksi 11 fitur numerik: log_realisasi, log_pagu, rasio_realisasi_pagu, zscore_per_skpd, trailing_zeros, is_q4, is_december, vendor_kontrak_count, dll.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-sm flex-shrink-0">2</span>
+<div>
+<h4 class="font-label-lg text-on-surface font-bold">Isolation Forest (Unsupervised)</h4>
+<p class="text-body-md text-on-surface-variant">Algoritma deteksi outlier berbasis partisi acak. n_estimators=200, contamination=0.05. Mampu mendeteksi pola pengeluaran janggal tanpa data label.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 bg-surface-container-low rounded-lg">
+<span class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-sm flex-shrink-0">3</span>
+<div>
+<h4 class="font-label-lg text-on-surface font-bold">Scoring & Classification</h4>
+<p class="text-body-md text-on-surface-variant">Setiap transaksi diberi anomaly_score (0-1). Score > threshold diklasifikasikan sebagai "Anomali" untuk investigasi lebih lanjut oleh auditor.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Tech Stack -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-primary">developer_board</span> Technology Stack</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg text-center border border-outline-variant/50">
+<span class="material-symbols-outlined text-primary text-3xl mb-2">code</span>
+<p class="font-label-lg font-bold">Python</p>
+<p class="text-label-sm text-on-surface-variant">Pandas, Scikit-learn</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg text-center border border-outline-variant/50">
+<span class="material-symbols-outlined text-primary text-3xl mb-2">language</span>
+<p class="font-label-lg font-bold">HTML/JS/CSS</p>
+<p class="text-label-sm text-on-surface-variant">Tailwind, PapaParse</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg text-center border border-outline-variant/50">
+<span class="material-symbols-outlined text-primary text-3xl mb-2">api</span>
+<p class="font-label-lg font-bold">CKAN API</p>
+<p class="text-label-sm text-on-surface-variant">Open Data Surabaya</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg text-center border border-outline-variant/50">
+<span class="material-symbols-outlined text-primary text-3xl mb-2">storage</span>
+<p class="font-label-lg font-bold">Lakehouse</p>
+<p class="text-label-sm text-on-surface-variant">Bronze/Silver/Gold</p>
+</div>
+</div>
+</div>
+
+<!-- Team -->
+<div class="bg-primary text-on-primary rounded-xl p-8 relative overflow-hidden">
+<div class="z-10 relative">
+<h3 class="font-headline-lg text-headline-lg mb-2">SmartBudget Platform</h3>
+<p class="text-body-lg opacity-80 mb-4">Dikembangkan sebagai proyek mata kuliah Big Data & Lake House — Semester 4, 2025.</p>
+<div class="flex flex-wrap gap-3 mt-4">
+<span class="bg-on-primary/10 px-4 py-2 rounded-lg font-label-lg">Deteksi Anomali APBD</span>
+<span class="bg-on-primary/10 px-4 py-2 rounded-lg font-label-lg">Transparansi Keuangan</span>
+<span class="bg-on-primary/10 px-4 py-2 rounded-lg font-label-lg">Open Data Surabaya</span>
+</div>
+</div>
+<div class="absolute right-0 top-0 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl -mr-24 -mt-24"></div>
+</div>
+</div>
+</div>
+
+</main>
+<!-- FAB Integration -->
+<button onclick="alert('Fitur Buat Laporan Baru akan tersedia di versi mendatang.')" title="Buat Laporan Baru" class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
+

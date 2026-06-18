@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Jejaring Entitas &amp; Temuan BPK</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#4c56af",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#2f3131",
+                      "on-tertiary-fixed-variant": "#474747",
+                      "on-error": "#ffffff",
+                      "primary": "#000666",
+                      "on-secondary-container": "#003567",
+                      "surface-container": "#eeeeee",
+                      "outline-variant": "#c6c5d4",
+                      "tertiary-fixed-dim": "#c8c6c6",
+                      "secondary-container": "#54a0fe",
+                      "surface-container-highest": "#e2e2e2",
+                      "surface-bright": "#f9f9f9",
+                      "primary-fixed": "#e0e0ff",
+                      "secondary-fixed-dim": "#a5c8ff",
+                      "on-surface-variant": "#454652",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed-variant": "#004786",
+                      "primary-container": "#1a237e",
+                      "on-secondary-fixed": "#001c3a",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#e4e2e1",
+                      "surface-variant": "#e2e2e2",
+                      "tertiary-container": "#303030",
+                      "secondary": "#005faf",
+                      "on-primary-container": "#8690ee",
+                      "outline": "#767683",
+                      "on-background": "#1a1c1c",
+                      "surface-container-low": "#f3f3f3",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#343d96",
+                      "inverse-primary": "#bdc2ff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed": "#d4e3ff",
+                      "surface-dim": "#dadada",
+                      "inverse-on-surface": "#f1f1f1",
+                      "on-primary-fixed": "#000767",
+                      "on-surface": "#1a1c1c",
+                      "surface-container-high": "#e8e8e8",
+                      "on-tertiary-container": "#999897",
+                      "primary-fixed-dim": "#bdc2ff",
+                      "on-tertiary-fixed": "#1b1c1c",
+                      "tertiary": "#1b1b1b",
+                      "surface": "#f9f9f9",
+                      "on-tertiary": "#ffffff",
+                      "background": "#f9f9f9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "density-default": "8px",
+                      "unit": "4px",
+                      "density-comfortable": "16px",
+                      "container-margin-mobile": "16px",
+                      "density-compact": "4px",
+                      "container-margin-desktop": "24px"
+              },
+              "fontFamily": {
+                      "title-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "label-lg": ["Inter"],
+                      "title-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                      "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                      "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                      "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Simple simulated grid background for the canvas */
+        .network-canvas-bg {
+            background-image: 
+                linear-gradient(to right, #f3f3f3 1px, transparent 1px),
+                linear-gradient(to bottom, #f3f3f3 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        /* Simulated Network Lines */
+        .edge-line {
+            position: absolute;
+            background-color: #c6c5d4; /* outline-variant */
+            height: 2px;
+            transform-origin: top left;
+            z-index: 10;
+        }
+        .edge-danger {
+            background-color: #ba1a1a; /* error */
+            border-bottom: 2px dashed #ba1a1a;
+            background-color: transparent;
+            height: 0;
+        }
+        
+        .node {
+            position: absolute;
+            z-index: 20;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff; /* surface-container-lowest */
+            border: 2px solid #c6c5d4; /* outline-variant */
+            border-radius: 9999px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+            min-width: 120px;
+        }
+        .node:hover {
+            border-color: #000666; /* primary */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 30;
+        }
+        .node.selected {
+            border-color: #ba1a1a; /* error */
+            background-color: #ffdad6; /* error-container */
+            border-width: 3px;
+        }
+        .node-icon {
+            display: block;
+            margin-bottom: 4px;
+            color: #454652; /* on-surface-variant */
+        }
+        .node.selected .node-icon {
+            color: #93000a; /* on-error-container */
+        }
+        .node-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+            color: #1a1c1c; /* on-surface */
+            white-space: nowrap;
+        }
+        .node.selected .node-label {
+            color: #93000a;
+        }
+        
+        /* Simulated semi-transparent blob for cluster */
+        .cluster-highlight {
+            position: absolute;
+            background-color: rgba(255, 218, 214, 0.4); /* error-container with opacity */
+            border: 1px dashed #ba1a1a; /* error */
+            border-radius: 9999px;
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="flex flex-col h-screen p-4 border-r border-outline-variant bg-surface-container-low w-64 flex-shrink-0 hidden md:flex">
+<div class="mb-8">
+<h2 class="font-title-lg text-title-lg text-primary">Administrasi</h2>
+<p class="font-label-md text-label-md text-on-surface-variant mt-1">Sistem Transparansi</p>
+</div>
+<ul class="flex flex-col gap-2 flex-grow">
+<!-- Inactive Tab -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-lg text-label-lg">Dashboard</span>
+</a>
+</li>
+<!-- Inactive Tab -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="bubble_chart">bubble_chart</span>
+<span class="font-label-lg text-label-lg">Heatmap Anomali</span>
+</a>
+</li>
+<!-- Inactive Tab -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-label-lg text-label-lg">Analisis Sentimen</span>
+</a>
+</li>
+<!-- Active Tab (Matched intent) -->
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary-container text-on-secondary-container transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="assessment" style="font-variation-settings: 'FILL' 1;">assessment</span>
+<span class="font-label-lg text-label-lg font-semibold">Laporan BPK</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant flex-shrink-0">
+<div class="flex items-center gap-4">
+<!-- Mobile menu trigger -->
+<button class="md:hidden p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="font-headline-lg text-headline-lg font-bold text-primary">SmartAPBD</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors scale-95 active:scale-90 transform">
+<span class="material-symbols-outlined" data-icon="location_city">location_city</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors scale-95 active:scale-90 transform">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors scale-95 active:scale-90 transform">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas Body -->
+<main class="flex-1 overflow-auto p-container-margin-desktop bg-surface flex flex-col gap-6">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Jejaring Entitas &amp; Temuan BPK</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Pemetaan relasi vendor, dinas, dan indikasi konflik kepentingan berdasar data audit.</p>
+</div>
+<!-- Search Bar -->
+<div class="relative w-full md:w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-surface-container-lowest text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" placeholder="Cari Nama Vendor / Dinas..." type="text"/>
+</div>
+</div>
+<!-- Two Column Layout (70/30) -->
+<div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-[600px]">
+<!-- Left Panel: Network Graph Canvas (70%) -->
+<div class="flex-[7] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col relative shadow-sm">
+<!-- Graph Toolbar -->
+<div class="h-12 border-b border-outline-variant flex items-center justify-between px-4 bg-surface-bright z-40 relative">
+<div class="flex gap-2 items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Visualisasi Relasi</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Zoom In"><span class="material-symbols-outlined text-sm">zoom_in</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Zoom Out"><span class="material-symbols-outlined text-sm">zoom_out</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container rounded transition-colors" title="Reset View"><span class="material-symbols-outlined text-sm">fit_screen</span></button>
+</div>
+</div>
+<!-- Canvas Area -->
+<div class="flex-1 relative network-canvas-bg overflow-hidden cursor-move">
+<!-- Simulated Cluster Highlight for High Risk -->
+<div class="cluster-highlight" style="top: 40%; left: 60%; width: 300px; height: 280px; transform: translate(-50%, -50%);"></div>
+<!-- Edges (Simulated with absolute positioning math logic) -->
+<!-- Central to Top Left -->
+<div class="edge-line" style="top: 50%; left: 35%; width: 180px; transform: rotate(-145deg);"></div>
+<!-- Central to Bottom Left -->
+<div class="edge-line" style="top: 50%; left: 35%; width: 150px; transform: rotate(135deg);"></div>
+<!-- Central to Right Cluster (Danger) -->
+<div class="edge-line edge-danger" style="top: 50%; left: 35%; width: 200px; transform: rotate(-15deg);"></div>
+<!-- Central to Right Cluster 2 (Danger) -->
+<div class="edge-line edge-danger" style="top: 50%; left: 35%; width: 220px; transform: rotate(25deg);"></div>
+<!-- Inner Cluster connection -->
+<div class="edge-line edge-danger" style="top: 42%; left: 58%; width: 120px; transform: rotate(70deg);"></div>
+<!-- Nodes -->
+<!-- Main Entity -->
+<div class="node" style="top: 50%; left: 35%;">
+<span class="material-symbols-outlined node-icon">account_balance</span>
+<span class="node-label">Dinas Pekerjaan Umum</span>
+</div>
+<!-- Standard Vendors -->
+<div class="node" style="top: 25%; left: 20%;">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">PT Bangun Raya</span>
+</div>
+<div class="node" style="top: 70%; left: 22%;">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">CV Mitra Abadi</span>
+</div>
+<!-- High Risk Cluster (Selected) -->
+<div class="node selected" style="top: 42%; left: 58%;">
+<span class="material-symbols-outlined node-icon">warning</span>
+<span class="node-label">CV Maju Jaya</span>
+</div>
+<div class="node" style="top: 60%; left: 62%;">
+<span class="material-symbols-outlined node-icon">storefront</span>
+<span class="node-label">PT Sinar Mas Jaya</span>
+</div>
+</div>
+<!-- Graph Legend -->
+<div class="absolute bottom-4 left-4 bg-surface-container-lowest/90 backdrop-blur border border-outline-variant p-3 rounded-lg shadow-sm z-40 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full border border-outline-variant bg-white"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entitas Standar</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full border-2 border-error bg-error-container"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Indikasi Risiko Tinggi</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-8 h-0 border-b border-outline-variant"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Relasi Kontrak</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-8 h-0 border-b-2 border-dashed border-error"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Konflik Kepentingan</span>
+</div>
+</div>
+</div>
+<!-- Right Panel: Entity Profile Sidebar (30%) -->
+<div class="flex-[3] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col">
+<!-- Profile Header -->
+<div class="p-6 border-b border-outline-variant bg-surface-bright flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="w-12 h-12 rounded bg-error-container flex items-center justify-center text-on-error-container flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">business</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">CV Maju Jaya</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Penyedia Jasa Konstruksi</p>
+</div>
+<!-- Alert Badge -->
+<div class="bg-error-container text-on-error-container p-3 rounded-lg flex items-start gap-3 border border-error/20">
+<span class="material-symbols-outlined text-[20px] mt-0.5">error</span>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg font-bold">Indikasi Alamat Fiktif</span>
+<span class="font-label-sm text-label-sm opacity-90 mt-1">Entitas berbagi alamat fisik dengan 3 perusahaan lain yang terafiliasi memenangkan tender yang sama.</span>
+</div>
+</div>
+</div>
+<!-- Profile Body / Stats -->
+<div class="p-6 flex-1 overflow-auto flex flex-col gap-6">
+<!-- Key Stats Block -->
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Total Nilai Proyek (2022-2023)</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Rp 12.5M</span>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 flex-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Total Kontrak</span>
+<span class="font-title-lg text-title-lg text-on-surface">8 Paket</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 flex-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase block mb-1">Temuan BPK</span>
+<span class="font-title-lg text-title-lg text-error font-bold">2 Kasus</span>
+</div>
+</div>
+</div>
+<hr class="border-outline-variant"/>
+<!-- Related Documents List -->
+<div class="flex flex-col gap-3">
+<h4 class="font-title-md text-title-md text-on-surface mb-1">Dokumen Terkait</h4>
+<!-- Document Item 1 -->
+<a class="group flex items-start gap-3 p-3 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-colors" href="#">
+<div class="w-10 h-10 rounded bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate group-hover:text-primary transition-colors">LHP_BPK_DinasPU_2023.pdf</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Temuan Kekurangan Volume Pekerjaan</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1 opacity-70">12 Okt 2023 • 2.4 MB</span>
+</div>
+</a>
+<!-- Document Item 2 -->
+<a class="group flex items-start gap-3 p-3 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-colors" href="#">
+<div class="w-10 h-10 rounded bg-surface-container text-on-surface-variant flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">contract</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg text-on-surface truncate group-hover:text-primary transition-colors">Kontrak_014_PU_CV_Maju.pdf</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Rehabilitasi Jalan Protokol</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-1 opacity-70">05 Mar 2023 • 5.1 MB</span>
+</div>
+</a>
+</div>
+</div>
+<!-- Action Button -->
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest">
+<button class="w-full py-2.5 px-4 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg hover:bg-primary-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">manage_search</span>
+                            Investigasi Lanjut
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

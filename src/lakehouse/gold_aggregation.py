@@ -1,31 +1,23 @@
-
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import sum, avg, count, col
+import pandas as pd
 from pathlib import Path
 
-spark = SparkSession.builder.appName("GoldLayer").getOrCreate()
 BASE = Path(__file__).resolve().parents[2]
+silver_file = BASE / "data/silver/silver_apbd_belanja.csv"
 
-sipd = (
-    spark.read.option("header",True)
-    .csv(str(BASE/"data/bronze/sipd_dummy.csv"))
-    .withColumn("anggaran", col("anggaran").cast("long"))
-)
+print(f"Membaca data dari Silver Layer: {silver_file}")
+silver = pd.read_csv(silver_file)
 
-sent = spark.read.option("header",True).csv(str(BASE/"data/bronze/sentiment_dummy.csv"))
+# Melakukan agregasi untuk Ringkasan Anggaran per SKPD
+gold_skpd = silver.groupby("nama_skpd").agg(
+    total_pagu=("pagu_anggaran", "sum"),
+    total_realisasi=("realisasi", "sum"),
+    jumlah_proyek=("id", "count")
+).reset_index()
 
-joined = sipd.join(sent,"id_proyek")
+out_dir = BASE / "data/gold"
+out_dir.mkdir(parents=True, exist_ok=True)
+out_file = out_dir / "gold_skpd_summary.csv"
 
-gold = (
-    joined.groupBy("dinas")
-    .agg(
-        sum("anggaran").alias("total_anggaran"),
-        avg(col("sentiment_score").cast("double")).alias("avg_sentiment"),
-        count("*").alias("jumlah_proyek")
-    )
-)
-
-gold.write.mode("overwrite").option("header",True).csv(str(BASE/"data/gold/dashboard_ready"))
-
-gold.show()
-spark.stop()
+gold_skpd.to_csv(out_file, index=False, encoding="utf-8-sig")
+print(f"Gold layer berhasil dibuat di: {out_file}")
+print(gold_skpd.head())

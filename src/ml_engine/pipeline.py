@@ -33,9 +33,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from ml_engine.config import SILVER_DIR, ML_OUTPUT_DIR
 
-# Data generators
+# Data sources
 from ml_engine.data_generator.generate_apbd_synthetic import generate_apbd_data
-from ml_engine.data_generator.generate_vendor_network import generate_vendor_network
+from ml_engine.process_lpse_silver import process_lpse_data
+from ingestion.ingest_ckan_apbd import run_ckan_ingestion
+from ml_engine.process_ckan_silver import process_ckan_to_silver
 
 # Anomaly detection
 from ml_engine.anomaly_detection.benford_analysis import run_benford_analysis
@@ -55,6 +57,7 @@ from ml_engine.visualize import generate_all_visualizations
 
 
 def run_pipeline(
+    use_ckan: bool = True,
     use_synthetic: bool = True,
     generate_data: bool = True,
     save_intermediates: bool = True,
@@ -65,8 +68,8 @@ def run_pipeline(
 
     Parameters
     ----------
-    use_synthetic : bool
-        Gunakan data sintetis (True) atau load dari Silver layer (False).
+    use_ckan : bool
+        Gunakan data asli dari API CKAN Surabaya (True) atau data sintetis (False).
     generate_data : bool
         Generate data baru (True) atau load existing (False).
     save_intermediates : bool
@@ -94,9 +97,15 @@ def run_pipeline(
     print("\n\n▶ STEP 1: Data Loading")
     print("-" * 40)
 
-    if use_synthetic and generate_data:
+    if use_ckan:
+        print("  Using real data from CKAN API...")
+        if generate_data:
+            run_ckan_ingestion()
+        df_transactions = process_ckan_to_silver()
+        _, df_vendors = process_lpse_data()
+    elif use_synthetic and generate_data:
         df_transactions = generate_apbd_data(save=save_intermediates)
-        df_vendors = generate_vendor_network(save=save_intermediates)
+        _, df_vendors = process_lpse_data()
     elif use_synthetic:
         # Load from existing CSVs
         trx_path = SILVER_DIR / "silver_apbd_belanja.csv"
@@ -108,13 +117,15 @@ def run_pipeline(
             print(f"  Loaded {len(df_transactions)} transactions from {trx_path}")
             print(f"  Loaded {len(df_vendors)} vendors from {vendor_path}")
         else:
-            print("  Data not found, generating synthetic data...")
+            print("  Data not found, generating synthetic data/processing LPSE...")
             df_transactions = generate_apbd_data(save=save_intermediates)
-            df_vendors = generate_vendor_network(save=save_intermediates)
+            _, df_vendors = process_lpse_data()
     else:
         # Load real data from Silver layer
         df_transactions = pd.read_csv(SILVER_DIR / "silver_apbd_belanja.csv")
-        df_vendors = pd.read_csv(SILVER_DIR / "silver_vendor_network.csv")
+        _, df_vendors = process_lpse_data() # Process LPSE if real data used
+        if df_vendors is None:
+            df_vendors = pd.read_csv(SILVER_DIR / "silver_vendor_network.csv")
 
     results["df_transactions_raw"] = df_transactions.copy()
     results["df_vendors_raw"] = df_vendors.copy()
@@ -235,7 +246,7 @@ def run_pipeline(
 
 if __name__ == "__main__":
     results = run_pipeline(
-        use_synthetic=True,
+        use_ckan=True,
         generate_data=True,
         save_intermediates=True,
         generate_plots=True,

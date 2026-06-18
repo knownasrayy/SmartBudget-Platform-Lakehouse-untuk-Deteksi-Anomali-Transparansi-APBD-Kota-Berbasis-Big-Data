@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#54a0fe",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#e0e0ff",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f9f9f9",
+                    "tertiary-container": "#303030",
+                    "surface-container-low": "#f3f3f3",
+                    "outline-variant": "#c6c5d4",
+                    "on-secondary-fixed": "#001c3a",
+                    "surface-dim": "#dadada",
+                    "surface": "#f9f9f9",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#1a1c1c",
+                    "tertiary-fixed": "#e4e2e1",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#bdc2ff",
+                    "tertiary-fixed-dim": "#c8c6c6",
+                    "surface-container": "#eeeeee",
+                    "on-surface-variant": "#454652",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "primary-fixed-dim": "#bdc2ff",
+                    "on-tertiary-container": "#999897",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-container": "#003567",
+                    "on-secondary-fixed-variant": "#004786",
+                    "secondary": "#005faf",
+                    "background": "#f9f9f9",
+                    "on-primary-container": "#8690ee",
+                    "inverse-on-surface": "#f1f1f1",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e2e2e2",
+                    "on-primary-fixed": "#000767",
+                    "on-background": "#1a1c1c",
+                    "surface-tint": "#4c56af",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#474747",
+                    "inverse-surface": "#2f3131",
+                    "tertiary": "#1b1b1b",
+                    "primary": "#000666",
+                    "on-primary-fixed-variant": "#343d96",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "primary-container": "#1a237e",
+                    "outline": "#767683",
+                    "surface-container-highest": "#e2e2e2",
+                    "secondary-fixed": "#d4e3ff",
+                    "surface-container-high": "#e8e8e8"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "density-default": "8px",
+                    "density-compact": "4px",
+                    "density-comfortable": "16px",
+                    "container-margin-mobile": "16px",
+                    "gutter": "16px",
+                    "container-margin-desktop": "24px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "title-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<nav class="flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">SmartAPBD</span>
+</div>
+<div class="hidden md:flex items-center gap-8 h-full">
+<a class="h-full flex items-center px-4 font-title-md text-title-md text-on-surface-variant hover:bg-surface-container transition-colors" href="#">Dashboard</a>
+<a class="h-full flex items-center px-4 font-title-md text-title-md text-on-surface-variant hover:bg-surface-container transition-colors" href="#">Heatmap Anomali</a>
+<a class="h-full flex items-center px-4 font-title-md text-title-md text-on-surface-variant hover:bg-surface-container transition-colors" href="#">Analisis Sentimen</a>
+<a class="h-full flex items-center px-4 font-title-md text-title-md text-primary border-b-2 border-primary" href="#">Laporan BPK</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors"><span class="material-symbols-outlined">location_city</span></button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors"><span class="material-symbols-outlined">calendar_today</span></button>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-primary">account_circle</span></button>
+</div>
+</nav>
+<!-- Sidebar & Content Shell -->
+<div class="flex min-h-[calc(100vh-64px)]">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-64px)] w-64 fixed left-0 top-16 p-4 bg-surface-container-low border-r border-outline-variant">
+<div class="mb-8 px-2">
+<h2 class="font-title-lg text-title-lg text-primary">Administrasi</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Sistem Transparansi</p>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">bubble_chart</span> Heatmap Anomali
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">psychology</span> Analisis Sentimen
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 font-label-lg text-label-lg bg-secondary-container text-on-secondary-container rounded-lg translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">assessment</span> Laporan BPK
+                </a>
+</nav>
+<div class="mt-auto p-4 bg-primary-container rounded-xl text-on-primary">
+<p class="font-label-sm text-label-sm opacity-80 uppercase tracking-wider">Status Server</p>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+<span class="font-label-lg text-label-lg">Sistem Optimal</span>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 lg:ml-64 p-6 md:p-8 max-w-7xl mx-auto">
+<!-- Header Section -->
+<header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Repository Laporan BPK</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Dokumen formal hasil audit Badan Pemeriksa Keuangan untuk transparansi penggunaan anggaran daerah.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-primary rounded-lg font-label-lg hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">download</span> Ekspor Rekap
+                    </button>
+</div>
+</header>
+<!-- Summary Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between overflow-hidden relative">
+<div class="z-10">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Temuan</p>
+<h3 class="font-display-lg text-4xl font-bold text-primary mt-1">128</h3>
+<p class="font-label-sm text-label-sm text-error mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12% dari periode lalu
+                        </p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-8xl">error_outline</span>
+</div>
+</div>
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-between overflow-hidden relative">
+<div class="z-10">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Rekomendasi Ditindaklanjuti</p>
+<h3 class="font-display-lg text-4xl font-bold text-secondary mt-1">84%</h3>
+<div class="w-full bg-surface-container h-1.5 rounded-full mt-4">
+<div class="bg-secondary h-full rounded-full w-[84%]"></div>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-8xl">task_alt</span>
+</div>
+</div>
+<div class="bg-primary-container p-6 rounded-2xl text-on-primary flex flex-col justify-between overflow-hidden relative">
+<div class="z-10">
+<p class="font-label-md text-label-md text-primary-fixed-dim uppercase tracking-wider">Opini WTP Berturut-turut</p>
+<h3 class="font-display-lg text-4xl font-bold mt-1">5 Tahun</h3>
+<p class="font-label-sm text-label-sm text-secondary-fixed mt-2">Mempertahankan standar akuntansi</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10 text-white">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+</div>
+</section>
+<!-- Search and List -->
+<section class="glass-card rounded-2xl overflow-hidden border border-outline-variant">
+<div class="p-4 bg-surface-container-low border-b border-outline-variant flex flex-col md:flex-row gap-4 items-center">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-body-md" placeholder="Cari berdasarkan judul, auditor, atau tahun..." type="text"/>
+</div>
+<div class="flex gap-2 w-full md:w-auto">
+<select class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 font-label-lg focus:outline-none">
+<option>Semua Tahun</option>
+<option>2024</option>
+<option>2023</option>
+<option>2022</option>
+</select>
+<select class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 font-label-lg focus:outline-none">
+<option>Urutkan: Terbaru</option>
+<option>Terbanyak Temuan</option>
+<option>Status Tindak Lanjut</option>
+</select>
+</div>
+</div>
+<!-- Document List -->
+<div class="divide-y divide-outline-variant overflow-x-auto">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 px-6 py-3 bg-surface-container text-on-surface-variant font-label-md uppercase tracking-wider min-w-[800px]">
+<div class="col-span-5">Dokumen &amp; Judul</div>
+<div class="col-span-2">Auditor</div>
+<div class="col-span-1 text-center">Tahun</div>
+<div class="col-span-2 text-center">Temuan</div>
+<div class="col-span-2 text-right">Aksi</div>
+</div>
+<!-- Row 1 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-surface-container-low transition-colors min-w-[800px]">
+<div class="col-span-5 flex items-center gap-4">
+<div class="w-12 h-16 bg-surface-container rounded-sm border border-outline-variant flex-shrink-0 relative overflow-hidden group">
+<img alt="PDF Preview" class="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform" data-alt="A macro close-up of a formal government document with official stamps and signatures on high-quality paper. The lighting is soft, office-like, and professional, emphasizing the texture of the paper and the weight of administrative authority. The color palette is composed of clean whites, subtle grays, and deep navy blue ink, creating a mood of serious institutional transparency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqaiFLBaQAdfTLolpdZFqhbU9OtZdJLUN3sr2KAI8f0Fv2aQOlo9kU_PtsqjhzChiutKnNQlRH-YpOjiFAXkaE7lvfEB4mjGncXxEy107aaE2x2NFYAZKlaIsYlGSA-Zj43hhuB_D8yc83sEgWBfre5zByScQ4695QUjk3qg2RJFmpBcxXWLe8LpSn-e7ht3E9Vkapp8UPwII88Js7wzVQaMeqJahIeHnLfm5t9-KSUojENWKJd86BiUUNLIcJWxoJBBax-0pss8Wt"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface">LHP BPK LKPD Prov. Jawa Barat TA 2023</h4>
+<p class="font-label-sm text-on-surface-variant mt-1">PDF • 12.4 MB • Terunggah 14 Mei 2024</p>
+</div>
+</div>
+<div class="col-span-2 font-body-md text-on-surface-variant">BPK RI Perwakilan Jabar</div>
+<div class="col-span-1 text-center font-body-md">2023</div>
+<div class="col-span-2 text-center">
+<span class="px-2 py-1 bg-error-container text-on-error-container rounded-full font-label-sm">18 Temuan</span>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">download</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">share</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-primary transition-colors"><span class="material-symbols-outlined">open_in_new</span></button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-surface-container-low transition-colors min-w-[800px]">
+<div class="col-span-5 flex items-center gap-4">
+<div class="w-12 h-16 bg-surface-container rounded-sm border border-outline-variant flex-shrink-0 relative overflow-hidden group">
+<img alt="PDF Preview" class="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform" data-alt="A perspective shot of a stack of organized folders and legal binders in a modern, brightly lit archives room. The environment is minimalist and clinical, with soft-focus backgrounds of glass and steel office structures. The aesthetic is purely professional and civic, with a color palette centered on white, cool grays, and deep institutional blues, signifying ordered information and fiscal integrity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzYwCIiQKHy2L8PhF3uvvuma-I2HsDeoajUMi8vQDO4zZb9Vwm9YxpCmz9sECWioVztLSOiWVZdIvstOnotgVxjNDGbLBnEx7w43XDwnNiDvFMKrF3uQ6ZKOnbeyNNR28jGvxDUPka26M6lUqyPTTw7o9JoatBc3xuZzEXO_AeFgcDmwJpqOZQRSSg0WuaZf7TgINdCWHs630K7LMUgJ6Q8f184qWDt9FbMqShfWr9kHyn7xY6EbhhOh_PUBXphMwmW6Qzf37yxY8n"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface">Laporan Kinerja Instansi Pemerintah (LKjIP)</h4>
+<p class="font-label-sm text-on-surface-variant mt-1">PDF • 8.1 MB • Terunggah 02 Jan 2024</p>
+</div>
+</div>
+<div class="col-span-2 font-body-md text-on-surface-variant">BPK Pusat</div>
+<div class="col-span-1 text-center font-body-md">2023</div>
+<div class="col-span-2 text-center">
+<span class="px-2 py-1 bg-surface-container-highest text-on-surface rounded-full font-label-sm">4 Temuan</span>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">download</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">share</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-primary transition-colors"><span class="material-symbols-outlined">open_in_new</span></button>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-surface-container-low transition-colors min-w-[800px]">
+<div class="col-span-5 flex items-center gap-4">
+<div class="w-12 h-16 bg-surface-container rounded-sm border border-outline-variant flex-shrink-0 relative overflow-hidden group">
+<img alt="PDF Preview" class="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform" data-alt="Close up of a financial calculator resting on top of a detailed spreadsheet with complex rows of data and charts. The setting is a clean, modern desk with diffused daylight coming from a large window. The mood is focused and analytically precise, utilizing a palette of corporate blues, whites, and light silver metallic accents to evoke a sense of professional financial audit and responsibility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU74pYiZhSEJVgOfVDHjK_N9R3njLkF0RjaM4QvumiRbRF66MhClqEQEX6BbWhZp_2LFxvbCWbzj-gVE4kx1x-kWKm004mJRam5gbupR2Q4J3RqS4G87eSxVAHAxGUk0gEFg4e8WD40kn_uz8yiAmhY3bhOB6sJRNIyFgs87VmkaC8Ef7K1xYk3HKW5Iify9-c6ZOc5cp2koxWhmDSNW88_CTRPLIucgG_FGDcTQJjvugI06YYR-aBRv5JxTabastJTc7m5cIfKQxX"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div>
+<h4 class="font-title-md text-on-surface">Audit Khusus Pengadaan Barang &amp; Jasa</h4>
+<p class="font-label-sm text-on-surface-variant mt-1">PDF • 15.7 MB • Terunggah 18 Nov 2023</p>
+</div>
+</div>
+<div class="col-span-2 font-body-md text-on-surface-variant">Tim Audit Investigasi</div>
+<div class="col-span-1 text-center font-body-md">2022</div>
+<div class="col-span-2 text-center">
+<span class="px-2 py-1 bg-error-container text-on-error-container rounded-full font-label-sm">31 Temuan</span>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">download</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"><span class="material-symbols-outlined">share</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full text-primary transition-colors"><span class="material-symbols-outlined">open_in_new</span></button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="p-4 bg-surface-container-lowest flex justify-between items-center border-t border-outline-variant">
+<p class="font-label-md text-on-surface-variant">Menampilkan 1-10 dari 48 laporan</p>
+<div class="flex gap-1">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-label-lg">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors font-label-lg">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors font-label-lg">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Bottom Insight Card -->
+<section class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="glass-card p-6 rounded-2xl">
+<h5 class="font-title-md text-on-surface mb-4">Statistik Tindak Lanjut</h5>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="font-label-lg text-on-surface-variant">Sesuai Rekomendasi</span>
+<span class="font-title-md text-primary">682</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[80%]"></div>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-label-lg text-on-surface-variant">Belum Sesuai</span>
+<span class="font-title-md text-secondary">142</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[15%]"></div>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-label-lg text-on-surface-variant">Belum Ditindaklanjuti</span>
+<span class="font-title-md text-error">24</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[5%]"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-highest p-6 rounded-2xl relative overflow-hidden">
+<div class="relative z-10">
+<h5 class="font-title-md text-on-surface mb-2">Bantuan Audit</h5>
+<p class="font-body-md text-on-surface-variant mb-6">Butuh klarifikasi terkait temuan atau cara membaca laporan? Tim analis kami siap membantu proses interpretasi data.</p>
+<button class="px-6 py-3 bg-on-surface text-surface rounded-xl font-label-lg flex items-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm">contact_support</span> Hubungi Admin BPK
+                        </button>
+</div>
+<span class="material-symbols-outlined absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12">help_center</span>
+</div>
+</section>
+</main>
+</div>
+<!-- Floating Action Button - Only for Desktop Main View -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-[60] lg:flex hidden">
+<span class="material-symbols-outlined">upload_file</span>
+</button>
+<script>
+        // Micro-interaction for table rows
+        document.querySelectorAll('.grid.items-center').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('shadow-sm');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('shadow-sm');
+            });
+        });
+
+        // Simple search filter simulation
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('input', (e) => {
+            console.log('Searching for:', e.target.value);
+            // logic to filter rows would go here
+        });
+    </script>
+</body></html>

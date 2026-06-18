@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Peta Anomali Regional - SmartAPBD</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for data tables/containers if needed */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c6c5d4; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #767683; }
+        
+        /* Map specific styles */
+        .map-district {
+            transition: fill 0.2s ease, filter 0.2s ease;
+            cursor: pointer;
+        }
+        .map-district:hover {
+            filter: brightness(0.9);
+        }
+        .map-district-normal { fill: #f3f3f3; stroke: #c6c5d4; stroke-width: 1; }
+        .map-district-warning { fill: #ffdad6; stroke: #c6c5d4; stroke-width: 1; }
+        .map-district-critical { fill: #ba1a1a; stroke: #c6c5d4; stroke-width: 1; }
+    </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-tint": "#4c56af", "on-primary": "#ffffff", "inverse-surface": "#2f3131",
+                        "on-tertiary-fixed-variant": "#474747", "on-error": "#ffffff", "primary": "#000666",
+                        "on-secondary-container": "#003567", "surface-container": "#eeeeee", "outline-variant": "#c6c5d4",
+                        "tertiary-fixed-dim": "#c8c6c6", "secondary-container": "#54a0fe", "surface-container-highest": "#e2e2e2",
+                        "surface-bright": "#f9f9f9", "primary-fixed": "#e0e0ff", "secondary-fixed-dim": "#a5c8ff",
+                        "on-surface-variant": "#454652", "error": "#ba1a1a", "on-secondary-fixed-variant": "#004786",
+                        "primary-container": "#1a237e", "on-secondary-fixed": "#001c3a", "error-container": "#ffdad6",
+                        "tertiary-fixed": "#e4e2e1", "surface-variant": "#e2e2e2", "tertiary-container": "#303030",
+                        "secondary": "#005faf", "on-primary-container": "#8690ee", "outline": "#767683",
+                        "on-background": "#1a1c1c", "surface-container-low": "#f3f3f3", "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#343d96", "inverse-primary": "#bdc2ff", "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff", "secondary-fixed": "#d4e3ff", "surface-dim": "#dadada",
+                        "inverse-on-surface": "#f1f1f1", "on-primary-fixed": "#000767", "on-surface": "#1a1c1c",
+                        "surface-container-high": "#e8e8e8", "on-tertiary-container": "#999897", "primary-fixed-dim": "#bdc2ff",
+                        "on-tertiary-fixed": "#1b1c1c", "tertiary": "#1b1b1b", "surface": "#f9f9f9", "on-tertiary": "#ffffff",
+                        "background": "#f9f9f9"
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    spacing: { "gutter": "16px", "density-default": "8px", "unit": "4px", "density-comfortable": "16px", "container-margin-mobile": "16px", "density-compact": "4px", "container-margin-desktop": "24px" },
+                    fontFamily: {
+                        "title-lg": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"],
+                        "label-sm": ["Inter"], "body-md": ["Inter"], "display-lg": ["Inter"], "headline-lg-mobile": ["Inter"],
+                        "label-lg": ["Inter"], "title-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "title-lg": ["22px", { lineHeight: "28px", fontWeight: "500" }],
+                        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
+                        "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "0.5px", fontWeight: "400" }],
+                        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+                        "body-md": ["14px", { lineHeight: "20px", letterSpacing: "0.25px", fontWeight: "400" }],
+                        "display-lg": ["57px", { lineHeight: "64px", letterSpacing: "-0.25px", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
+                        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "500" }],
+                        "title-md": ["16px", { lineHeight: "24px", letterSpacing: "0.15px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-surface-container-low h-full w-64 fixed left-0 top-0 flex flex-col p-4 border-r border-outline-variant hidden md:flex z-40">
+<div class="mb-8 px-4">
+<h1 class="font-title-lg text-title-lg text-primary">Administrasi</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-1">Sistem Transparansi</p>
+</div>
+<nav class="flex flex-col gap-1">
+<!-- Dashboard (Inactive) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-lg text-label-lg">Dashboard</span>
+</a>
+<!-- Heatmap Anomali (Active based on semantic intent) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary-container text-on-secondary-container transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="bubble_chart">bubble_chart</span>
+<span class="font-label-lg text-label-lg">Heatmap Anomali</span>
+</a>
+<!-- Analisis Sentimen (Inactive) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-label-lg text-label-lg">Analisis Sentimen</span>
+</a>
+<!-- Laporan BPK (Inactive) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-label-lg text-label-lg">Laporan BPK</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface-container-lowest flex justify-between items-center w-full px-container-margin-desktop h-16 sticky top-0 z-50 border-b border-outline-variant">
+<div class="flex items-center">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden mr-4 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="font-headline-lg text-headline-lg font-bold text-primary">SmartAPBD</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container transition-colors p-2 rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="location_city">location_city</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container transition-colors p-2 rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container transition-colors p-2 rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Dashboard Canvas -->
+<main class="flex-1 p-container-margin-desktop bg-surface">
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Peta Anomali Regional</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Distribusi spasial risiko anggaran berdasarkan realisasi vs. perencanaan (Q3 2023).</p>
+</div>
+<!-- Filter/Action Bar -->
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-label-lg text-label-lg text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                        Filter Wilayah
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                        Ekspor SHP
+                    </button>
+</div>
+</div>
+<!-- Spatial Visualization Container (The Map) -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col h-[600px] relative">
+<!-- Map Toolbar Inner -->
+<div class="h-12 border-b border-outline-variant bg-surface-container-low flex items-center px-4 justify-between z-10">
+<div class="flex gap-2">
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Zoom In">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined text-[20px]" data-icon="remove">remove</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-1 self-center"></div>
+<button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container transition-colors" title="Reset View">
+<span class="material-symbols-outlined text-[20px]" data-icon="my_location">my_location</span>
+</button>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                        Data ter-update: 24 Okt 2023, 14:00 WIB
+                    </div>
+</div>
+<!-- The Actual Map Canvas -->
+<!-- We use a subtle grid background to imply a GIS workspace, then draw vector paths for districts -->
+<div class="flex-1 relative bg-[#eef1f5] w-full h-full overflow-hidden" style="background-image: radial-gradient(#d4d4d4 1px, transparent 1px); background-size: 20px 20px;">
+<!-- SVG Layer for Choropleth Polygons -->
+<svg class="w-full h-full absolute inset-0 z-0" viewbox="0 0 1000 600">
+<!-- Simulated Base Geography / Water bodies (optional, keeping it simple/abstract administrative) -->
+<!-- District Polygons -->
+<!-- Normal Districts (Safe) -->
+<path class="map-district map-district-normal" d="M100,50 L250,80 L220,200 L80,180 Z"></path>
+<path class="map-district map-district-normal" d="M250,80 L400,60 L450,150 L380,220 L220,200 Z"></path>
+<path class="map-district map-district-normal" d="M80,180 L220,200 L190,350 L50,300 Z"></path>
+<path class="map-district map-district-normal" d="M400,60 L600,40 L650,180 L450,150 Z"></path>
+<path class="map-district map-district-normal" d="M190,350 L350,380 L300,500 L150,480 Z"></path>
+<path class="map-district map-district-normal" d="M650,180 L800,150 L850,300 L620,320 Z"></path>
+<!-- Warning Districts (Elevated Risk) -->
+<path class="map-district map-district-warning" d="M220,200 L380,220 L350,380 L190,350 Z"></path>
+<path class="map-district map-district-warning" d="M450,150 L650,180 L620,320 L420,280 Z"></path>
+<!-- Critical District (High Anomaly - Target for Tooltip) -->
+<!-- This path represents "Kecamatan Gubeng" -->
+<path class="map-district map-district-critical" d="M380,220 L420,280 L620,320 L580,450 L400,420 L350,380 Z"></path>
+<!-- More Normal/Warning to fill out map -->
+<path class="map-district map-district-normal" d="M620,320 L850,300 L820,480 L580,450 Z"></path>
+<path class="map-district map-district-warning" d="M350,380 L400,420 L380,550 L250,520 L300,500 Z"></path>
+</svg>
+<!-- Interactive Tooltip Overlay -->
+<!-- Positioned over the 'Critical' polygon representing Kecamatan Gubeng -->
+<div class="absolute z-20 pointer-events-none" style="top: 280px; left: 450px; transform: translate(-50%, -100%);">
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] border border-outline-variant p-4 w-64 mb-3 relative">
+<!-- Tooltip Arrow -->
+<div class="absolute w-3 h-3 bg-surface-container-lowest border-b border-r border-outline-variant transform rotate-45 -bottom-1.5 left-1/2 -translate-x-1/2"></div>
+<!-- Tooltip Content -->
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-title-md text-title-md text-on-surface">Kecamatan Gubeng</h3>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">open_in_new</span>
+</div>
+<div class="space-y-2 mt-3 border-t border-outline-variant pt-2">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Total Anomali</span>
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">14 Pos Belanja</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Skor Risiko</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-error text-on-error">
+                                        Tinggi
+                                    </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Nilai Deviasi</span>
+<span class="font-label-md text-label-md text-error">Rp 2.4M</span>
+</div>
+</div>
+</div>
+</div>
+<!-- GIS Style Bottom Legend -->
+<div class="absolute bottom-6 right-6 z-20 bg-surface-container-lowest rounded-lg border border-outline-variant p-3 shadow-sm w-72">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Indeks Keparahan Anomali</h4>
+<!-- Gradient Bar -->
+<div class="h-3 w-full rounded-full bg-gradient-to-r from-surface-container-low via-error-container to-error border border-outline-variant/50 mb-2"></div>
+<!-- Scale Labels -->
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Aman (Normal)</span>
+<span>Waspada</span>
+<span class="text-error font-medium">Kritis</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Additional Context Data / Bento Grid below map -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+<!-- Summary Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-4">Ringkasan Wilayah</h3>
+<div class="space-y-4">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Total Wilayah Administratif</p>
+<p class="font-headline-lg text-headline-lg text-primary mt-1">31 <span class="font-body-md text-body-md text-on-surface-variant font-normal">Kecamatan</span></p>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5 mb-1">
+<div class="bg-error h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">15% wilayah dalam status kritis (4 Kecamatan)</p>
+</div>
+</div>
+<!-- Actionable Insights Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm md:col-span-2">
+<h3 class="font-title-md text-title-md text-on-surface mb-4">Rekomendasi Tindakan</h3>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant/50">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="warning">warning</span>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Inspeksi Lanjutan Kecamatan Gubeng</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Prioritaskan audit pada pos belanja infrastruktur publik yang menunjukkan deviasi &gt;30% dari standar RKA.</p>
+</div>
+<button class="ml-auto text-primary hover:bg-primary-fixed transition-colors px-3 py-1.5 rounded font-label-md text-label-md">Tinjau</button>
+</li>
+<li class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant/50">
+<span class="material-symbols-outlined text-on-surface-variant mt-0.5" data-icon="policy">policy</span>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Validasi Data Kecamatan Sukolilo</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Terdapat anomali administratif pada laporan triwulan. Diperlukan sinkronisasi ulang data SKPD.</p>
+</div>
+<button class="ml-auto text-primary hover:bg-primary-fixed transition-colors px-3 py-1.5 rounded font-label-md text-label-md">Tinjau</button>
+</li>
+</ul>
+</div>
+</div>
+</main>
+</div>
+</body></html>
