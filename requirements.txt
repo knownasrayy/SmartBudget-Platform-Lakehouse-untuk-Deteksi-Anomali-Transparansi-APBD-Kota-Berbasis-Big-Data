@@ -14,3 +14,5 @@ scipy>=1.11
 transformers
 torch
 pyspark
+fastapi
+uvicorn

@@ -39,26 +39,58 @@ const KECAMATAN_ANOMALI = [
 // Leaflet map instances
 let leafletMaps = {};
 
+// Load GeoJSON
+window.surabayaGeoJSON = null;
+fetch('assets/data/surabaya_kecamatan.geojson')
+    .then(r => r.json())
+    .then(data => { window.surabayaGeoJSON = data; })
+    .catch(e => console.error("Failed to load GeoJSON:", e));
+
 function initLeafletMaps() {
     // Guard: Leaflet must be loaded
     if (typeof L === 'undefined') return;
 
     // ---- 1. MINI MAP (Dashboard Utama) ----
     if (!leafletMaps['mini'] && document.getElementById('mini-map')) {
-        const miniMap = L.map('mini-map', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false })
-            .setView(SURABAYA_CENTER, 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
-        
-        const heatData = KECAMATAN_ANOMALI.map(k => [k.lat, k.lng, k.skor]);
-        L.heatLayer(heatData, { radius: 30, blur: 22, maxZoom: 14, gradient: {0.3:'#3b82f6', 0.6:'#f59e0b', 1.0:'#ef4444'} }).addTo(miniMap);
-        
-        KECAMATAN_ANOMALI.filter(k => k.skor >= 0.75).forEach(k => {
-            L.marker([k.lat, k.lng], {
-                icon: L.divIcon({ className: '', html: `<div style="background:#ef4444;color:white;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.3)">${k.nama}</div>`, iconAnchor: [30, 10] })
-            }).addTo(miniMap);
-        });
-        leafletMaps['mini'] = miniMap;
-        setTimeout(() => miniMap.invalidateSize(), 100);
+        try {
+            const miniMap = L.map('mini-map', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false })
+                .setView(SURABAYA_CENTER, 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
+            
+            if (window.surabayaGeoJSON) {
+                L.geoJSON(window.surabayaGeoJSON, {
+                    style: function(feature) {
+                        const kecName = feature.properties.KECAMATAN;
+                        const k = KECAMATAN_ANOMALI.find(x => x.nama.toUpperCase() === kecName.toUpperCase());
+                        if (k) {
+                            const isHigh = k.skor >= 0.75;
+                            const isMed = k.skor >= 0.5;
+                            const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+                            return { color: 'white', weight: 1, fillColor: color, fillOpacity: 0.6 };
+                        }
+                        return { color: 'white', weight: 1, fillColor: '#ccc', fillOpacity: 0.3 };
+                    }
+                }).addTo(miniMap);
+            } else {
+                // Fallback if GeoJSON not loaded
+                KECAMATAN_ANOMALI.forEach(k => {
+                    const isHigh = k.skor >= 0.75;
+                    const isMed = k.skor >= 0.5;
+                    const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+                    L.circle([k.lat, k.lng], { color: color, fillColor: color, fillOpacity: 0.35, radius: 1800, weight: 1 }).addTo(miniMap);
+                });
+            }
+            
+            KECAMATAN_ANOMALI.filter(k => k.skor >= 0.75).forEach(k => {
+                L.marker([k.lat, k.lng], {
+                    icon: L.divIcon({ className: '', html: `<div style="background:#ef4444;color:white;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.3)">${k.nama}</div>`, iconAnchor: [30, 10] })
+                }).addTo(miniMap);
+            });
+            leafletMaps['mini'] = miniMap;
+            setTimeout(() => miniMap.invalidateSize(), 100);
+        } catch(e) {
+            console.error("Mini Map Error:", e);
+        }
     }
 
     // ---- 2. HEATMAP ANOMALI (Full tab) ----
@@ -67,19 +99,24 @@ function initLeafletMaps() {
             .setView(SURABAYA_CENTER, 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(hmMap);
         
-        const heatData = KECAMATAN_ANOMALI.map(k => [k.lat, k.lng, k.skor]);
-        L.heatLayer(heatData, { radius: 40, blur: 30, maxZoom: 16, gradient: {0.2:'#22c55e', 0.5:'#f59e0b', 0.75:'#ef4444', 1.0:'#7f1d1d'} }).addTo(hmMap);
-        
-        KECAMATAN_ANOMALI.forEach(k => {
-            const color = k.skor >= 0.75 ? '#ef4444' : k.skor >= 0.5 ? '#f59e0b' : '#22c55e';
-            const label = k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN';
-            L.marker([k.lat, k.lng], {
-                icon: L.divIcon({ className: '', html: `<div style="background:${color};color:white;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4)">${k.nama}</div>`, iconAnchor: [40, 10] })
-            }).bindPopup(`<b>${k.nama}</b><br>Skor Anomali: ${(k.skor*100).toFixed(0)}%<br>Status: <b style="color:${color}">${label}</b>`).addTo(hmMap);
-        });
         leafletMaps['heatmap'] = hmMap;
-        setTimeout(() => hmMap.invalidateSize(), 100);
+        setTimeout(() => { 
+            try {
+                window.renderTop5Anomali(); 
+                // Prevent Canvas getImageData error when display: none
+                let mapContainer = document.getElementById('heatmap-main-map');
+                if (mapContainer && mapContainer.offsetWidth > 0) {
+                    hmMap.invalidateSize(); 
+                    window.renderHeatmapLayer(); 
+                }
+            } catch(e) {
+                console.error("Heatmap Render Error:", e);
+                const container = document.getElementById('dynamic-top5-container');
+                if(container) container.innerHTML = `<div class='p-4 text-error'>Gagal memuat peta: ${e.message}</div>`;
+            }
+        }, 100);
     }
+
 
     // ---- 3. PETA SPASIAL ----
     if (!leafletMaps['peta'] && document.getElementById('peta-spasial-map')) {
@@ -116,6 +153,16 @@ function switchTab(tabId, element) {
     const targetTab = document.getElementById('tab-content-' + tabId);
     if(targetTab) {
         targetTab.style.display = 'block';
+        
+        // Fix Leaflet hidden canvas issue when tab becomes visible
+        if (tabId === 'heatmap_anomali' && leafletMaps['heatmap']) {
+            setTimeout(() => {
+                leafletMaps['heatmap'].invalidateSize();
+                if (!window.heatmapActiveLayer) {
+                    window.renderHeatmapLayer();
+                }
+            }, 100);
+        }
     }
     document.querySelectorAll('.nav-item').forEach(el => {
         el.className = "nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg";
@@ -143,11 +190,25 @@ console.log("SmartAPBD Dashboard Initialized");
 
 // --- SMARTAPBD DYNAMIC DATA INTEGRATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    initDashboard();
-    // Init maps after a short delay to ensure DOM is rendered
-    setTimeout(initLeafletMaps, 300);
-    // Populate Grid View
-    populateHeatmapGrid();
+    try {
+        initDashboard();
+    } catch(e) {
+        console.error("Dashboard Init Error:", e);
+    }
+    
+    try {
+        // Init maps after a short delay to ensure DOM is rendered
+        setTimeout(initLeafletMaps, 300);
+    } catch(e) {
+        console.error("Map Init Error:", e);
+    }
+    
+    try {
+        // Populate Grid View
+        populateHeatmapGrid();
+    } catch(e) {
+        console.error("Grid Init Error:", e);
+    }
 });
 
 function toggleHeatmapView(view) {
@@ -155,30 +216,211 @@ function toggleHeatmapView(view) {
     const gridDiv = document.getElementById('heatmap-grid-view');
     const btnMap = document.getElementById('btn-hm-map');
     const btnGrid = document.getElementById('btn-hm-grid');
-    const legendCard = document.getElementById('heatmap-legend-card');
-    
-    if (!mapDiv || !gridDiv) return;
     
     if (view === 'map') {
         mapDiv.style.display = 'block';
         gridDiv.style.display = 'none';
-        if (legendCard) legendCard.style.display = 'block';
-        
-        btnMap.className = "px-4 py-1.5 bg-white shadow-sm rounded-md font-label-lg text-label-lg text-primary flex items-center gap-2";
-        btnGrid.className = "px-4 py-1.5 font-label-lg text-label-lg text-on-surface-variant flex items-center gap-2 hover:text-primary transition-colors";
-        
-        if (leafletMaps['heatmap']) {
-            leafletMaps['heatmap'].invalidateSize();
-        }
+        if(btnMap) btnMap.className = "px-4 py-1.5 bg-white shadow-sm rounded-md font-label-lg text-label-lg text-primary flex items-center gap-2";
+        if(btnGrid) btnGrid.className = "px-4 py-1.5 font-label-lg text-label-lg text-on-surface-variant flex items-center gap-2 hover:text-primary transition-colors";
+        setTimeout(() => { if (leafletMaps['heatmap']) leafletMaps['heatmap'].invalidateSize(); }, 100);
     } else {
         mapDiv.style.display = 'none';
         gridDiv.style.display = 'block';
-        if (legendCard) legendCard.style.display = 'none';
-        
-        btnGrid.className = "px-4 py-1.5 bg-white shadow-sm rounded-md font-label-lg text-label-lg text-primary flex items-center gap-2";
-        btnMap.className = "px-4 py-1.5 font-label-lg text-label-lg text-on-surface-variant flex items-center gap-2 hover:text-primary transition-colors";
+        if(btnGrid) btnGrid.className = "px-4 py-1.5 bg-white shadow-sm rounded-md font-label-lg text-label-lg text-primary flex items-center gap-2";
+        if(btnMap) btnMap.className = "px-4 py-1.5 font-label-lg text-label-lg text-on-surface-variant flex items-center gap-2 hover:text-primary transition-colors";
     }
 }
+
+window.heatmapLevelFilters = ['High', 'Medium', 'Low'];
+window.heatmapKategoriFilters = ['Honorarium', 'Belanja Modal', 'Perjalanan Dinas', 'Hibah & Bansos'];
+window.heatmapActiveLayer = null;
+window.heatmapMarkersLayer = null;
+
+window.toggleAnomalyFilter = function(level) {
+    if(window.heatmapLevelFilters.includes(level)) {
+        window.heatmapLevelFilters = window.heatmapLevelFilters.filter(l => l !== level);
+        let icon = document.getElementById('icon-anomali-' + level.toLowerCase());
+        if(icon) { icon.innerText = 'radio_button_unchecked'; icon.classList.add('opacity-50'); }
+    } else {
+        window.heatmapLevelFilters.push(level);
+        let icon = document.getElementById('icon-anomali-' + level.toLowerCase());
+        if(icon) { icon.innerText = 'check_circle'; icon.classList.remove('opacity-50'); }
+    }
+    window.renderHeatmapLayer();
+    window.renderTop5Anomali();
+};
+
+window.renderHeatmapLayer = function() {
+    let hmMap = leafletMaps['heatmap'];
+    if(!hmMap) return;
+    
+    if(window.heatmapActiveLayer) hmMap.removeLayer(window.heatmapActiveLayer);
+    if(window.heatmapMarkersLayer) hmMap.removeLayer(window.heatmapMarkersLayer);
+    
+    let filteredData = KECAMATAN_ANOMALI.filter(k => {
+        const level = k.skor >= 0.75 ? 'High' : k.skor >= 0.5 ? 'Medium' : 'Low';
+        const levelMatch = window.heatmapLevelFilters.includes(level);
+        const catMatch = k.kategori && k.kategori.some(cat => window.heatmapKategoriFilters.includes(cat));
+        return levelMatch && catMatch;
+    });
+    
+    window.heatmapActiveLayer = L.layerGroup().addTo(hmMap);
+    window.heatmapMarkersLayer = L.layerGroup().addTo(hmMap);
+    
+    if (window.surabayaGeoJSON) {
+        L.geoJSON(window.surabayaGeoJSON, {
+            style: function(feature) {
+                const kecName = feature.properties.KECAMATAN;
+                const k = filteredData.find(x => x.nama.toUpperCase() === kecName.toUpperCase());
+                if (k) {
+                    const isHigh = k.skor >= 0.75;
+                    const isMed = k.skor >= 0.5;
+                    const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+                    return { color: 'white', weight: 1.5, fillColor: color, fillOpacity: 0.6 };
+                }
+                return { color: 'white', weight: 1, fillColor: '#e2e8f0', fillOpacity: 0.2 };
+            },
+            onEachFeature: function(feature, layer) {
+                const kecName = feature.properties.KECAMATAN;
+                const k = filteredData.find(x => x.nama.toUpperCase() === kecName.toUpperCase());
+                if (k) {
+                    const isHigh = k.skor >= 0.75;
+                    const isMed = k.skor >= 0.5;
+                    const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+                    
+                    layer.bindTooltip(`<b>${k.nama}</b><br>Skor Anomali: ${(k.skor*100).toFixed(0)}%`);
+                    layer.on('click', () => {
+                        if (window.openDrillDown) window.openDrillDown(k);
+                    });
+                }
+            }
+        }).addTo(window.heatmapActiveLayer);
+    } else {
+        // Fallback
+        filteredData.forEach(k => {
+            const isHigh = k.skor >= 0.75;
+            const isMed = k.skor >= 0.5;
+            const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+            const label = isHigh ? 'KRITIS' : isMed ? 'WASPADA' : 'AMAN';
+            
+            L.circle([k.lat, k.lng], {
+                color: color, fillColor: color, fillOpacity: 0.35, radius: 1800, weight: 1
+            }).addTo(window.heatmapActiveLayer);
+        });
+    }
+    
+    // Labels for high risk only
+    filteredData.forEach(k => {
+        const isHigh = k.skor >= 0.75;
+        const isMed = k.skor >= 0.5;
+        const color = isHigh ? '#ef4444' : isMed ? '#f59e0b' : '#22c55e';
+        const label = isHigh ? 'KRITIS' : isMed ? 'WASPADA' : 'AMAN';
+        
+        if(!isMed && filteredData.length > 10) return;
+        
+        L.marker([k.lat, k.lng], {
+            icon: L.divIcon({ className: '', html: `<div style="background:${color};color:white;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4)">${k.nama}</div>`, iconAnchor: [40, 10] })
+        }).on('click', () => {
+            if (window.openDrillDown) window.openDrillDown(k);
+        }).addTo(window.heatmapMarkersLayer);
+    });
+    
+    // Also update grid
+    if (window.renderHeatmapGrid) {
+        window.renderHeatmapGrid(filteredData);
+    }
+    
+    // Generate Smart Insight
+    if (window.generateSmartInsight) {
+        window.generateSmartInsight(filteredData);
+    }
+    
+    let totalEl = document.getElementById('heatmap-anomali-total');
+    if(totalEl) totalEl.innerText = filteredData.length;
+};
+
+window.renderTop5Anomali = function() {
+    const container = document.getElementById('dynamic-top5-container');
+    if(!container) return;
+    
+    // Always use the full dataset for Top 5 SKPD, not affected by map filters
+    let sorted = [...KECAMATAN_ANOMALI].sort((a,b) => b.skor - a.skor).slice(0, 5);
+    
+    let html = '';
+    sorted.forEach((k, idx) => {
+        let isHigh = k.skor >= 0.75;
+        let isMed = k.skor >= 0.5;
+        let colorClass = isHigh ? 'error' : isMed ? 'amber-500' : 'primary';
+        let bgClass = isHigh ? 'bg-error text-on-error' : isMed ? 'bg-amber-500 text-white' : 'bg-primary text-on-primary';
+        let icon = isHigh ? 'warning' : isMed ? 'report' : 'info';
+        
+        let skpdMap = ['Belanja Modal', 'Honorarium', 'Bansos', 'Belanja Jasa', 'Pemeliharaan'];
+        let skpd = skpdMap[idx % skpdMap.length];
+        let val = (k.skor * 15).toFixed(1) + 'M';
+        let pct = Math.round(k.skor * 100);
+        
+        html += `
+        <div onclick="window.flyToKecamatan(${k.lat}, ${k.lng})" class="p-4 bg-surface-container-lowest rounded-xl border border-${colorClass === 'amber-500' ? 'outline-variant' : colorClass+'/30'} hover:border-${colorClass} transition-colors cursor-pointer group">
+            <div class="flex items-center justify-between mb-3">
+                <span class="w-6 h-6 rounded ${bgClass} flex items-center justify-center font-bold text-xs">0${idx+1}</span>
+                <span class="material-symbols-outlined text-${colorClass} text-[20px]">${icon}</span>
+            </div>
+            <h4 class="font-title-md text-title-md mb-1">${k.nama}</h4>
+            <div class="flex items-center justify-between">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">${skpd}</span>
+                <span class="font-bold text-${colorClass}">Rp ${val}</span>
+            </div>
+            <div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-${colorClass} h-full rounded-full" style="width: ${pct}%"></div>
+            </div>
+        </div>`;
+    });
+    
+    if(sorted.length === 0) {
+        html = '<div class="p-4 text-center text-on-surface-variant">Tidak ada data sesuai filter.</div>';
+    }
+    
+    container.innerHTML = html;
+};
+
+window.flyToKecamatan = function(lat, lng) {
+    let hmMap = leafletMaps['heatmap'];
+    if(hmMap) {
+        hmMap.flyTo([lat, lng], 15, { duration: 1.5 });
+    }
+};
+
+window.openReportModal = function() {
+    const modal = document.getElementById('report-modal');
+    if(modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        const content = document.getElementById('report-modal-content');
+        if(content) content.classList.remove('scale-95');
+    }
+};
+
+window.closeReportModal = function() {
+    const modal = document.getElementById('report-modal');
+    if(modal) {
+        modal.classList.add('opacity-0');
+        const content = document.getElementById('report-modal-content');
+        if(content) content.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+};
+
+window.submitReport = function() {
+    window.closeReportModal();
+    const toast = document.getElementById('toast-notification');
+    if(toast) {
+        document.getElementById('toast-message').innerText = 'Laporan berhasil dibuat dan masuk antrean investigasi.';
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+        }, 3000);
+    }
+};
 
 function populateHeatmapGrid() {
     const tbody = document.getElementById('heatmap-grid-tbody');
@@ -227,10 +469,10 @@ window.renderAnomalyTable = function() {
     const paginated = window.tableAnomalies.slice(startIndex, endIndex);
     
     if (paginated.length === 0) {
-        tbodyUtama.innerHTML = '<tr><td colspan="6" class="text-center py-4">Tidak ada anomali terdeteksi</td></tr>';
+        tbodyUtama.innerHTML = '<tr><td colspan="7" class="text-center py-4">Tidak ada anomali terdeteksi</td></tr>';
     } else {
-        paginated.forEach(row => {
-            tbodyUtama.appendChild(createAnomalyRow(row));
+        paginated.forEach((row, idx) => {
+            tbodyUtama.appendChild(createAnomalyRow(row, startIndex + idx + 1));
         });
     }
     
@@ -238,6 +480,32 @@ window.renderAnomalyTable = function() {
     if(infoSpan) {
         infoSpan.innerText = `Menampilkan ${Math.min(startIndex + 1, window.tableAnomalies.length)}-${Math.min(endIndex, window.tableAnomalies.length)} dari ${window.tableAnomalies.length} anomali`;
     }
+    
+    // Generate Pagination Controls
+    const totalPages = Math.ceil(window.tableAnomalies.length / ITEMS_PER_PAGE);
+    const paginationContainer = document.getElementById('anomaly-pagination-controls');
+    if(paginationContainer) {
+        let html = `<button onclick="prevAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors disabled:opacity-50" ${window.currentAnomalyPage === 1 ? 'disabled' : ''}><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
+        
+        for(let i = 1; i <= totalPages; i++) {
+            if(totalPages > 7) {
+                if(i !== 1 && i !== totalPages && Math.abs(i - window.currentAnomalyPage) > 1) {
+                    if(i === 2 || i === totalPages - 1) html += `<span class="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>`;
+                    continue;
+                }
+            }
+            const activeClass = i === window.currentAnomalyPage ? 'bg-primary text-white border-primary' : 'bg-white text-on-surface-variant border-outline-variant hover:bg-surface-container';
+            html += `<button onclick="goToAnomalyPage(${i})" class="w-8 h-8 flex items-center justify-center rounded border ${activeClass} transition-colors text-label-sm font-bold">${i}</button>`;
+        }
+        
+        html += `<button onclick="nextAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors disabled:opacity-50" ${window.currentAnomalyPage === totalPages ? 'disabled' : ''}><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>`;
+        paginationContainer.innerHTML = html;
+    }
+};
+
+window.goToAnomalyPage = function(page) {
+    window.currentAnomalyPage = page;
+    window.renderAnomalyTable();
 };
 
 window.nextAnomalyPage = function() {
@@ -269,13 +537,358 @@ window.sortAnomalyTable = function(col) {
     window.renderAnomalyTable();
 };
 
+window.filterAnomalyTable = function() {
+    const input = document.getElementById('search-utama');
+    const statusSelect = document.getElementById('filter-status-utama');
+    
+    const query = input ? input.value.toLowerCase() : '';
+    const statusFilter = statusSelect ? statusSelect.value : '';
+    
+    if(!window.originalTableAnomalies) return;
+    
+    window.tableAnomalies = window.originalTableAnomalies.filter(row => {
+        let matchQuery = true;
+        if(query !== '') {
+            matchQuery = (row.uraian_belanja && row.uraian_belanja.toLowerCase().includes(query)) ||
+                         (row.nama_skpd && row.nama_skpd.toLowerCase().includes(query)) ||
+                         (row.jenis_pengadaan && row.jenis_pengadaan.toLowerCase().includes(query));
+        }
+        
+        let matchStatus = true;
+        if(statusFilter !== '') {
+            let score = parseFloat(row.anomaly_score || 0);
+            let statusStr = score > 0.6 ? 'outlier' : 'warning';
+            matchStatus = statusStr === statusFilter;
+        }
+        
+        return matchQuery && matchStatus;
+    });
+    
+    window.currentAnomalyPage = 1;
+    window.renderAnomalyTable();
+};
+
+
+// --- NEW SENTIMENT FUNCTIONS ---
+
+window.activeSentimentFilter = { hashtag: null, keyword: '', sentiments: ['Positif', 'Negatif', 'Netral'] };
+
+window.applySentimentFilter = function() {
+    let kw = document.getElementById('sentiment-filter-keyword').value;
+    let sents = [];
+    if(document.getElementById('filter-cb-positif').checked) sents.push('Positif');
+    if(document.getElementById('filter-cb-negatif').checked) sents.push('Negatif');
+    if(document.getElementById('filter-cb-netral').checked) sents.push('Netral');
+    
+    window.activeSentimentFilter.keyword = kw;
+    window.activeSentimentFilter.sentiments = sents;
+    
+    document.getElementById('sentiment-filter-panel').classList.add('hidden');
+    window.renderSentimentFeed(window.sentimentData);
+};
+
+window.setHashtagFilter = function(hashtag) {
+    window.activeSentimentFilter.hashtag = hashtag;
+    window.renderSentimentFeed(window.sentimentData);
+};
+
+window.renderSentimentFeed = function(data) {
+    const feedContainer = document.getElementById('sentiment-feed-container');
+    if(!feedContainer) return;
+    feedContainer.innerHTML = '';
+    
+    let renderCount = 0;
+    let filter = window.activeSentimentFilter;
+    
+    data.forEach(row => {
+        if(row.sentiment_label && (row.teks || row.text)) {
+            let txt = row.teks || row.text;
+            let labelText = row.sentiment_label || 'Netral';
+            
+            // Check filters
+            if (filter.hashtag && !txt.toLowerCase().includes(filter.hashtag.toLowerCase())) return;
+            if (filter.keyword && !txt.toLowerCase().includes(filter.keyword.toLowerCase())) return;
+            if (filter.sentiments && filter.sentiments.length > 0 && !filter.sentiments.includes(labelText)) return;
+            
+            renderCount++;
+            
+            let labelColor = 'sentiment-neutral';
+            if(labelText === 'Positif') labelColor = 'sentiment-positive';
+            if(labelText === 'Negatif') labelColor = 'sentiment-negative';
+            
+            let source = row.sumber || row.platform || 'X';
+            let initials = source.substring(0,2).toUpperCase();
+            
+            let div = document.createElement('div');
+            div.className = "p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer";
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">${initials}</div>
+                        <div>
+                            <p class="font-label-lg text-label-lg">${source}</p>
+                            <p class="text-label-sm text-on-surface-variant">${row.tanggal || row.created_at || 'Baru saja'}</p>
+                        </div>
+                    </div>
+                    <span class="${labelColor} px-2 py-1 rounded text-label-sm font-bold">${labelText}</span>
+                </div>
+                <p class="text-body-md pl-11 text-on-surface">${txt}</p>
+                <div class="pl-11 mt-2 flex gap-4">
+                    <button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> ${Math.floor(Math.random() * 50)}</button>
+                    <button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
+                </div>
+            `;
+            feedContainer.appendChild(div);
+        }
+    });
+
+    if (renderCount === 0) {
+        let msg = filter.hashtag ? `Topik #${filter.hashtag}` : `Filter saat ini`;
+        feedContainer.innerHTML = `<div class="p-8 text-center text-on-surface-variant">Tidak ada tanggapan ditemukan untuk ${msg}.</div>`;
+    }
+};
+window.extractTrendingTopics = function(data) {
+    let wordCounts = {};
+    const stopwords = ['yang', 'di', 'ke', 'dari', 'pada', 'dan', 'atau', 'dengan', 'untuk', 'ini', 'itu', 'juga', 'dalam', 'tidak', 'ada', 'bisa', 'akan', 'sudah', 'saya', 'kita', 'kami', 'mereka', 'sebagai', 'oleh', 'kepada', 'bagi', 'karena', 'banyak', 'sangat', 'buat', 'lebih', 'lagi', 'nya', 'aku', 'kamu', 'dia', 'sama', 'apa', 'terus', 'kalau', 'aja', 'jadi', 'kalo', 'udah', 'bikin', 'kok', 'tapi', 'masih'];
+    
+    data.forEach(row => {
+        let txt = row.teks || row.text;
+        if(txt) {
+            let words = txt.toLowerCase().match(/[a-z]+/g) || [];
+            words.forEach(w => {
+                if(w.length > 4 && !stopwords.includes(w)) {
+                    wordCounts[w] = (wordCounts[w] || 0) + 1;
+                }
+            });
+        }
+    });
+    
+    let sortedWords = Object.entries(wordCounts).sort((a,b) => b[1] - a[1]).slice(0, 7);
+    
+    const container = document.getElementById('trending-topics-container');
+    if(container) {
+        let html = '';
+        sortedWords.forEach(sw => {
+            let word = sw[0].charAt(0).toUpperCase() + sw[0].slice(1);
+            let count = sw[1];
+            html += `<span onclick="window.setHashtagFilter('${word}')" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2 cursor-pointer hover:bg-primary hover:text-on-primary transition-colors shadow-sm border border-outline-variant">#${word} <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px] font-bold">${count}</span></span>`;
+        });
+        html += `<span onclick="window.setHashtagFilter(null)" class="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-lg text-label-lg flex items-center gap-2 cursor-pointer hover:bg-error hover:text-white transition-colors shadow-sm">Clear Filter</span>`;
+        container.innerHTML = html;
+    }
+};
+
+
+
+window.renderSentimentChart = function(data, range='day') {
+    const ctx = document.getElementById('sentiment-trend-chart');
+    if(!ctx) return;
+    if(!data || data.length === 0) return;
+    
+    let dateMap = {};
+    data.forEach(row => {
+        if(!row.tanggal) return;
+        let dStrRaw = row.tanggal;
+        // Fix string if needed
+        let d = new Date(dStrRaw);
+        if (isNaN(d.getTime())) return;
+        
+        let dStr;
+        if(range === 'day') {
+            dStr = d.toISOString().split('T')[0];
+        } else if(range === 'week') {
+            let dClone = new Date(d);
+            dClone.setDate(dClone.getDate() - dClone.getDay()); 
+            dStr = dClone.toISOString().split('T')[0]; 
+        } else if(range === 'month') {
+            dStr = d.toISOString().substring(0, 7); 
+        } else if(range === 'year') {
+            dStr = d.getFullYear().toString();
+        }
+        
+        if(!dateMap[dStr]) dateMap[dStr] = { Positif: 0, Negatif: 0, Netral: 0 };
+        let label = row.sentiment_label || 'Netral';
+        if(dateMap[dStr][label] !== undefined) dateMap[dStr][label]++;
+    });
+    
+    let sortedDates = Object.keys(dateMap).sort();
+    
+    let limit = 30; 
+    if(range === 'week') limit = 12; 
+    if(range === 'month') limit = 12; 
+    if(range === 'year') limit = 5;   
+    
+    if(sortedDates.length > limit) sortedDates = sortedDates.slice(sortedDates.length - limit);
+    
+    let labels = [];
+    let posData = [];
+    let negData = [];
+    
+    sortedDates.forEach(d => {
+        let labelStr = d;
+        if(range === 'day' || range === 'week') {
+            let dateObj = new Date(d);
+            labelStr = dateObj.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+            if(range === 'week') labelStr = 'Pekan ' + labelStr;
+        } else if(range === 'month') {
+            let parts = d.split('-');
+            let dateObj = new Date(parts[0], parseInt(parts[1])-1, 1);
+            labelStr = dateObj.toLocaleDateString('id-ID', {month: 'long', year: 'numeric'});
+        }
+        
+        labels.push(labelStr);
+        posData.push(dateMap[d].Positif);
+        negData.push(dateMap[d].Negatif);
+    });
+    
+    ['day', 'week', 'month', 'year'].forEach(r => {
+        let btn = document.getElementById('btn-chart-' + r);
+        if(btn) {
+            if(r === range) {
+                btn.className = "px-3 py-1 rounded-md text-label-sm font-bold bg-white shadow-sm text-primary transition-all";
+            } else {
+                btn.className = "px-3 py-1 rounded-md text-label-sm font-bold text-on-surface-variant hover:text-primary transition-all";
+            }
+        }
+    });
+
+    if(window.sentimentChartInst) {
+        window.sentimentChartInst.destroy();
+    }
+    
+    window.sentimentChartInst = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Positif',
+                    data: posData,
+                    borderColor: '#005faf',
+                    backgroundColor: 'rgba(0, 95, 175, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Negatif',
+                    data: negData,
+                    borderColor: '#ba1a1a',
+                    backgroundColor: 'rgba(186, 26, 26, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [4, 4],
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#e0e0e0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+};
+
+window.refreshSentiment = function() {
+    const feedContainer = document.getElementById('sentiment-feed-container');
+    if(feedContainer) feedContainer.innerHTML = '<div class="p-8 text-center text-on-surface-variant"><span class="material-symbols-outlined text-[32px] animate-spin mb-2">sync</span><p>Memuat live updates...</p></div>';
+    
+    fetch('/api/sentiment')
+        .then(response => response.json())
+        .then(data => {
+            window.sentimentData = data;
+            
+            let negativeCount = 0, total = 0, positifCount = 0, netralCount = 0;
+            data.forEach(row => {
+                if(row.sentiment_label && (row.teks || row.text)) {
+                    total++;
+                    if(row.sentiment_label === 'Positif') positifCount++;
+                    else if(row.sentiment_label === 'Negatif') negativeCount++;
+                    else if(row.sentiment_label === 'Netral') netralCount++;
+                }
+            });
+            
+            if(total > 0) {
+                let pctNeg = Math.round((negativeCount / total) * 100);
+                const el = document.getElementById('kpi-sentimen');
+                if(el) el.innerHTML = `${pctNeg}% <span class="text-title-md font-normal text-on-surface-variant">Netral/Negatif</span>`;
+
+                let pctPos = Math.round((positifCount / total) * 100);
+                let pctNet = Math.round((netralCount / total) * 100);
+                let pctNegOnly = pctNeg;
+                let gaugeScoreNum = (pctPos * 1.0 + pctNet * 0.5);
+                let gaugeScore = gaugeScoreNum.toFixed(1);
+
+                const elGauge = document.getElementById('sentiment-gauge-value');
+                if(elGauge) elGauge.innerText = gaugeScore;
+
+                const arcGauge = document.getElementById('sentiment-gauge-arc');
+                if(arcGauge) arcGauge.style.strokeDashoffset = 126 - (gaugeScoreNum / 100) * 126;
+
+                const labelGauge = document.getElementById('sentiment-gauge-label');
+                if(labelGauge) {
+                    if (gaugeScoreNum >= 75) {
+                        labelGauge.innerText = 'Sangat Baik';
+                        labelGauge.className = 'text-label-md text-primary font-bold uppercase tracking-widest mt-1';
+                        arcGauge.style.stroke = '#005faf'; 
+                    } else if (gaugeScoreNum >= 50) {
+                        labelGauge.innerText = 'Baik';
+                        labelGauge.className = 'text-label-md text-primary font-bold uppercase tracking-widest mt-1';
+                        arcGauge.style.stroke = '#005faf'; 
+                    } else if (gaugeScoreNum >= 35) {
+                        labelGauge.innerText = 'Cukup';
+                        labelGauge.className = 'text-label-md text-secondary font-bold uppercase tracking-widest mt-1';
+                        arcGauge.style.stroke = '#f59e0b'; 
+                    } else {
+                        labelGauge.innerText = 'Buruk';
+                        labelGauge.className = 'text-label-md text-error font-bold uppercase tracking-widest mt-1';
+                        arcGauge.style.stroke = '#ba1a1a'; 
+                    }
+                }
+
+                const interactionText = document.getElementById('sentiment-interaction-text');
+                if(interactionText) interactionText.innerText = `Berdasarkan ${total.toLocaleString()} interaksi media sosial & aduan masyarakat minggu ini.`;
+
+                const elPos = document.getElementById('sentiment-positif-pct');
+                if(elPos) elPos.innerText = pctPos + '%';
+                const elNet = document.getElementById('sentiment-netral-pct');
+                if(elNet) elNet.innerText = pctNet + '%';
+                const elNegL = document.getElementById('sentiment-negatif-pct');
+                if(elNegL) elNegL.innerText = pctNegOnly + '%';
+            }
+            
+            window.extractTrendingTopics(data);
+            window.renderSentimentFeed(data);
+            window.renderSentimentChart(data);
+        });
+};
+
+window.exportSentimentData = function() {
+    if(!window.sentimentData) return alert('Data belum dimuat.');
+    let csv = "tanggal,sumber,teks,sentiment_label,sentiment_score\n";
+    window.sentimentData.forEach(row => {
+        let txt = (row.teks || row.text || "").replace(/"/g, '""');
+        csv += `"${row.tanggal || ''}","${row.sumber || ''}","${txt}","${row.sentiment_label || ''}","${row.sentiment_score || ''}"\n`;
+    });
+    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "sentimen_publik.csv";
+    link.click();
+};
+
 function initDashboard() {
     // 1. Fetch gold_skpd_summary.csv for KPI 1 (Total Anggaran)
-    Papa.parse('/data/gold/gold_skpd_summary.csv', {
-        download: true,
-        header: true,
-        complete: function(results) {
-            let data = results.data;
+    fetch('/api/summary')
+        .then(response => response.json())
+        .then(data => {
             let totalAnggaran = 0;
             data.forEach(row => {
                 if(row.total_pagu) {
@@ -284,15 +897,13 @@ function initDashboard() {
             });
             const el = document.getElementById('kpi-total-anggaran');
             if(el && totalAnggaran > 0) el.innerText = formatRupiah(totalAnggaran);
-        }
-    });
+        });
 
     // 2. Fetch apbd_scored.csv for KPI 2 & Tables & Heatmap
-    Papa.parse('/data/gold/apbd_scored.csv', {
-        download: true,
-        header: true,
-        complete: function(results) {
-            let data = results.data.filter(r => r.id_transaksi); // filter empty rows
+    fetch('/api/anomalies')
+        .then(response => response.json())
+        .then(data => {
+            data = data.filter(r => r.id_transaksi); // filter empty rows
             let anomalies = [];
             let wilayahAnomalies = {};
 
@@ -363,8 +974,10 @@ function initDashboard() {
             }
 
             // --- TABEL DASHBOARD UTAMA ---
-            window.tableAnomalies = anomalies;
+            window.originalTableAnomalies = [...anomalies];
+            window.tableAnomalies = [...anomalies];
             window.tableAnomalies.sort((a, b) => parseFloat(b.ensemble_score || b.anomaly_score || 0) - parseFloat(a.ensemble_score || a.anomaly_score || 0));
+            window.originalTableAnomalies.sort((a, b) => parseFloat(b.ensemble_score || b.anomaly_score || 0) - parseFloat(a.ensemble_score || a.anomaly_score || 0));
             window.currentAnomalyPage = 1;
             window.renderAnomalyTable();
 
@@ -433,135 +1046,17 @@ function initDashboard() {
                     rank++;
                 });
             }
-        }
-    });
+        });
 
 
     // 3. Fetch sentiment_results.csv for KPI 3 & FEED
-    Papa.parse('/data/gold/sentiment_results.csv', {
-        download: true,
-        header: true,
-        complete: function(results) {
-            let data = results.data;
-            let negativeCount = 0;
-            let total = 0;
-            
-            const feedContainer = document.getElementById('sentiment-feed-container');
-            if(feedContainer) feedContainer.innerHTML = '';
-
-            data.forEach(row => {
-                if(row.sentiment_label && (row.teks || row.text)) {
-                    total++;
-                    let txt = row.teks || row.text;
-                    if(row.sentiment_label === 'Negatif' || row.sentiment_label === 'Netral') {
-                        negativeCount++;
-                    }
-
-                    // Populate Feed
-                    if(feedContainer) {
-                        let labelColor = 'sentiment-neutral';
-                        let labelText = row.sentiment_label;
-                        if(labelText === 'Positif') labelColor = 'sentiment-positive';
-                        if(labelText === 'Negatif') labelColor = 'sentiment-negative';
-                        
-                        let source = row.sumber || row.platform || 'X';
-                        let initials = source.substring(0,2).toUpperCase();
-                        
-                        let div = document.createElement('div');
-                        div.className = "p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer";
-                        div.innerHTML = `
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">${initials}</div>
-                                    <div>
-                                        <p class="font-label-lg text-label-lg">${source}</p>
-                                        <p class="text-label-sm text-on-surface-variant">${row.tanggal || row.created_at || 'Baru saja'}</p>
-                                    </div>
-                                </div>
-                                <span class="${labelColor} px-2 py-1 rounded text-label-sm font-bold">${labelText}</span>
-                            </div>
-                            <p class="text-body-md pl-11 text-on-surface">${txt}</p>
-                            <div class="pl-11 mt-2 flex gap-4">
-                                <button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">thumb_up</span> ${Math.floor(Math.random() * 50)}</button>
-                                <button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">reply</span> Balas</button>
-                            </div>
-                        `;
-                        feedContainer.appendChild(div);
-                    }
-                }
-            });
-
-            if(total > 0) {
-                let pctNeg = Math.round((negativeCount / total) * 100);
-                const el = document.getElementById('kpi-sentimen');
-                if(el) {
-                    el.innerHTML = `${pctNeg}% <span class="text-title-md font-normal text-on-surface-variant">Netral/Negatif</span>`;
-                }
-
-                // Update Sentiment tab gauge and percentages
-                let positifCount = 0, netralCount = 0, negatifCount = 0;
-                data.forEach(row => {
-                    if(row.sentiment_label === 'Positif') positifCount++;
-                    else if(row.sentiment_label === 'Negatif') negatifCount++;
-                    else if(row.sentiment_label === 'Netral') netralCount++;
-                });
-                let pctPos = Math.round((positifCount / total) * 100);
-                let pctNet = Math.round((netralCount / total) * 100);
-                let pctNegOnly = Math.round((negatifCount / total) * 100);
-                let gaugeScoreNum = (pctPos * 1.0 + pctNet * 0.5);
-                let gaugeScore = gaugeScoreNum.toFixed(1);
-
-                const elGauge = document.getElementById('sentiment-gauge-value');
-                if(elGauge) elGauge.innerText = gaugeScore;
-
-                // Update Gauge Arc Visual (126 is the half-circle stroke length)
-                const arcGauge = document.getElementById('sentiment-gauge-arc');
-                if(arcGauge) arcGauge.style.strokeDashoffset = 126 - (gaugeScoreNum / 100) * 126;
-
-                // Update Label Text (Sangat Baik / Baik / Cukup / Buruk)
-                const labelGauge = document.getElementById('sentiment-gauge-label');
-                if(labelGauge) {
-                    if (gaugeScoreNum >= 75) {
-                        labelGauge.innerText = 'Sangat Baik';
-                        labelGauge.className = 'text-label-md text-primary font-bold uppercase tracking-widest mt-1';
-                        arcGauge.style.stroke = '#005faf'; // primary
-                    } else if (gaugeScoreNum >= 50) {
-                        labelGauge.innerText = 'Baik';
-                        labelGauge.className = 'text-label-md text-primary font-bold uppercase tracking-widest mt-1';
-                        arcGauge.style.stroke = '#005faf'; // primary
-                    } else if (gaugeScoreNum >= 35) {
-                        labelGauge.innerText = 'Cukup';
-                        labelGauge.className = 'text-label-md text-secondary font-bold uppercase tracking-widest mt-1';
-                        arcGauge.style.stroke = '#f59e0b'; // warning
-                    } else {
-                        labelGauge.innerText = 'Buruk';
-                        labelGauge.className = 'text-label-md text-error font-bold uppercase tracking-widest mt-1';
-                        arcGauge.style.stroke = '#ba1a1a'; // error
-                    }
-                }
-
-                // Update total interaction text
-                const interactionText = document.getElementById('sentiment-interaction-text');
-                if(interactionText) {
-                    interactionText.innerText = `Berdasarkan ${total.toLocaleString()} interaksi media sosial & aduan masyarakat minggu ini.`;
-                }
-
-                const elPos = document.getElementById('sentiment-positif-pct');
-                if(elPos) elPos.innerText = pctPos + '%';
-                const elNet = document.getElementById('sentiment-netral-pct');
-                if(elNet) elNet.innerText = pctNet + '%';
-                const elNeg = document.getElementById('sentiment-negatif-pct');
-                if(elNeg) elNeg.innerText = pctNegOnly + '%';
-            }
-        }
-    });
+    window.refreshSentiment();
 
     // 4. Fetch gold_jejaring_vendor.csv for Jejaring Entitas
-    Papa.parse('/data/gold/gold_jejaring_vendor.csv', {
-        download: true,
-        header: true,
-        complete: function(results) {
-            let data = results.data.filter(r => r.nama_vendor);
+    fetch('/api/vendors')
+        .then(response => response.json())
+        .then(data => {
+            data = data.filter(r => r.nama_vendor);
             window.jejaringVendorData = data; // Store globally
             if(data && data.length > 0) {
                 // Find top highest risk vendor
@@ -575,8 +1070,7 @@ function initDashboard() {
                     topVendor.is_fraud_vendor === 'True'
                 );
             }
-        }
-    });
+        });
 }
 
 // Update Jejaring Entitas right panel when a node is clicked
@@ -617,7 +1111,7 @@ window.selectJejaringNode = function(name, type, nilaiTotal, kontrakCount, isRis
 
 
 
-function createAnomalyRow(row) {
+function createAnomalyRow(row, index = '-') {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-surface-container transition-colors';
     
@@ -633,6 +1127,7 @@ function createAnomalyRow(row) {
     let realisasiVal = parseFloat(row.realisasi || 0);
 
     tr.innerHTML = `
+        <td class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">${index}</td>
         <td class="px-6 py-4">
             <p class="font-title-md text-title-md text-on-surface">${row.uraian_belanja || '-'}</p>
             <p class="font-label-sm text-label-sm text-on-surface-variant">${row.nama_skpd || '-'}</p>
@@ -655,7 +1150,10 @@ function showDetail(btn) {
     let kategori = btn.dataset.kategori;
     let realisasi = formatRupiah(parseFloat(btn.dataset.realisasi));
     let zscore = btn.dataset.zscore;
-    let skpd = btn.closest('tr').querySelector('td:nth-child(1) p:nth-child(2)').innerText;
+    
+    // Find SKPD. It's now in the second td because of the index column.
+    let skpdEl = btn.closest('tr').querySelector('td:nth-child(2) p:nth-child(2)');
+    let skpd = skpdEl ? skpdEl.innerText : 'SKPD Tidak Diketahui';
     
     // Set UI elements in the Detail Anomali tab
     let elId = document.getElementById('detail-id-header');
@@ -670,16 +1168,15 @@ function showDetail(btn) {
     let elReal = document.getElementById('detail-realisasi');
     if(elReal) elReal.innerText = realisasi || '-';
     
-    let elSkpd = document.getElementById('detail-skpd');
-    if(elSkpd) elSkpd.innerText = skpd || 'SKPD Tidak Diketahui';
+    let elSkpd = document.getElementById('detail-skpd-name');
+    if(elSkpd) elSkpd.innerText = skpd;
+
+    // Optional: Fetch detail data from backend if available
+    // fetch(`/api/silver/lpse/detail?id=${id}`).then(...)
     
-    // Temukan tombol nav Detail Anomali di sidebar
-    let detailTabBtn = document.querySelector('a[data-id="detail_anomali"]');
-    if(detailTabBtn) {
-        // Pindah ke tab Detail Anomali
-        switchTab('detail_anomali', detailTabBtn);
-    } else {
-        alert('Fitur Detail belum tersedia.');
+    // Auto switch to Detail tab
+    if (window.switchTab) {
+        window.switchTab('detail_anomali');
     }
 }
 
@@ -781,69 +1278,36 @@ KECAMATAN_ANOMALI.forEach((k, i) => {
 
 window.updateHeatmapData = function() {
     const checkedBoxes = document.querySelectorAll('.hm-filter-kategori:checked');
-    const selectedCats = Array.from(checkedBoxes).map(cb => cb.value);
+    window.heatmapKategoriFilters = Array.from(checkedBoxes).map(cb => cb.value);
     
-    // filter data: if any checked category matches the item's category
-    const filtered = KECAMATAN_ANOMALI.filter(k => {
-        if (selectedCats.length === 0) return false;
-        return k.kategori.some(cat => selectedCats.includes(cat));
-    });
-    
-    // Update Leaflet heatmap (if initialized)
-    const hmMap = leafletMaps['heatmap'];
-    if (hmMap) {
-        // Remove all layers except tile layer
-        hmMap.eachLayer(layer => {
-            if (!layer._url) hmMap.removeLayer(layer);
-        });
-        
-        // Re-add heat layer
-        const heatData = filtered.map(k => [k.lat, k.lng, k.skor]);
-        L.heatLayer(heatData, { radius: 35, blur: 25, maxZoom: 14, gradient: {0.3:'#3b82f6', 0.6:'#f59e0b', 1.0:'#ef4444'} }).addTo(hmMap);
-        
-        // Re-add markers
-        filtered.forEach(k => {
-            const color = k.skor >= 0.75 ? '#ef4444' : k.skor >= 0.5 ? '#f59e0b' : '#22c55e';
-            const fillOpacity = 0.2 + k.skor * 0.5;
-            L.circle([k.lat, k.lng], {
-                color: color, fillColor: color, fillOpacity: fillOpacity,
-                radius: 800 + k.skor * 1200,
-                weight: k.skor >= 0.75 ? 2.5 : 1
-            }).bindPopup(`
-                <div style="min-width:180px">
-                <b style="font-size:14px">${k.nama}</b><br>
-                <hr style="margin:6px 0">
-                <b>Skor Risiko:</b> ${(k.skor*100).toFixed(0)}%<br>
-                <b>Status:</b> <span style="color:${color};font-weight:bold">${k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN'}</span><br>
-                <b>Kategori:</b> ${k.kategori.join(', ')}
-                </div>
-            `).addTo(hmMap);
-        });
-    }
-    
-    // Update Grid View
+    // Just re-render the unified heatmap layer and it will handle both map and grid
+    window.renderHeatmapLayer();
+};
+
+window.renderHeatmapGrid = function(filtered) {
     const tbody = document.getElementById('heatmap-grid-tbody');
-    if (tbody) {
-        const sorted = [...filtered].sort((a, b) => b.skor - a.skor);
-        if (sorted.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-on-surface-variant">Tidak ada data untuk kategori yang dipilih</td></tr>';
-        } else {
-            tbody.innerHTML = sorted.map(k => {
-                const colorClass = k.skor >= 0.75 ? 'text-error bg-error/10' : k.skor >= 0.5 ? 'text-amber-600 bg-amber-500/10' : 'text-green-600 bg-green-500/10';
-                const label = k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN';
-                
-                return `
-                    <tr class="hover:bg-surface-container-lowest transition-colors">
-                        <td class="p-4 font-bold">${k.nama}</td>
-                        <td class="p-4">
-                            <span class="px-2 py-1 rounded text-xs font-bold ${colorClass}">${label}</span>
-                        </td>
-                        <td class="p-4 text-xs text-on-surface-variant">${k.kategori.join(', ')}</td>
-                        <td class="p-4 text-right font-mono">${(k.skor*100).toFixed(1)}%</td>
-                    </tr>
-                `;
-            }).join('');
-        }
+    if (!tbody) return;
+    
+    const sorted = [...filtered].sort((a, b) => b.skor - a.skor);
+    if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-on-surface-variant">Tidak ada data untuk kategori yang dipilih</td></tr>';
+    } else {
+        tbody.innerHTML = sorted.map(k => {
+            const colorClass = k.skor >= 0.75 ? 'text-error bg-error/10' : k.skor >= 0.5 ? 'text-amber-600 bg-amber-500/10' : 'text-green-600 bg-green-500/10';
+            const label = k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN';
+            const cats = k.kategori ? k.kategori.join(', ') : '-';
+            
+            return `
+                <tr class="hover:bg-surface-container-lowest transition-colors">
+                    <td class="p-4 font-bold">${k.nama}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded text-xs font-bold ${colorClass}">${label}</span>
+                    </td>
+                    <td class="p-4 text-xs text-on-surface-variant">${cats}</td>
+                    <td class="p-4 text-right font-mono">${(k.skor*100).toFixed(1)}%</td>
+                </tr>
+            `;
+        }).join('');
     }
 };
 
@@ -858,165 +1322,238 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(window.updateHeatmapData, 500);
 });
 
-// --- YOUTUBE COMMENTS (REAL DATA) DYNAMIC FETCHING ---
+// --- ADVANCED HEATMAP FEATURES ---
 
-// --- REAL API DATA DYNAMIC FETCHING (YouTube + GNews) ---
-window.loadApiData = async function() {
-    const container = document.getElementById('sentiment-feed-container');
-    if (!container) return;
+window.exportHeatmapCSV = function() {
+    let filteredData = KECAMATAN_ANOMALI.filter(k => {
+        const level = k.skor >= 0.75 ? 'High' : k.skor >= 0.5 ? 'Medium' : 'Low';
+        const levelMatch = window.heatmapLevelFilters.includes(level);
+        const catMatch = k.kategori && k.kategori.some(cat => window.heatmapKategoriFilters.includes(cat));
+        return levelMatch && catMatch;
+    });
     
-    try {
-        let combinedData = [];
-        
-        // 1. Fetch YouTube JSON
-        try {
-            const ytResponse = await fetch('/data/bronze/yt_comments_raw.json');
-            if (ytResponse.ok) {
-                const ytData = await ytResponse.json();
-                ytData.forEach(item => {
-                    combinedData.push({
-                        source: 'YouTube',
-                        author: item.authorDisplayName || "Warganet",
-                        text: item.textOriginal || "",
-                        date: item.publishedAt,
-                        likes: item.likeCount || 0
-                    });
-                });
-            }
-        } catch (e) {
-            console.warn("Could not fetch YouTube data:", e);
-        }
-        
-        // 2. Fetch GNews CSV
-        try {
-            const gnResponse = await fetch('/data/bronze/gnews_raw.csv');
-            if (gnResponse.ok) {
-                const csvText = await gnResponse.text();
-                // Simple CSV parse (ignores quotes with commas for now as heuristic)
-                const rows = csvText.split('\n').filter(r => r.trim().length > 0);
-                if (rows.length > 1) {
-                    const headers = rows[0].split(',');
-                    for(let i=1; i<rows.length; i++) {
-                        // Very naive split just to get it working in MVP without PapaParse
-                        // Assuming format: title,description,publishedAt,source_name
-                        // Since title/desc might contain commas, a real CSV parser is better. 
-                        // For MVP, we will just regex split by comma outside quotes (simplified)
-                        let row = rows[i];
-                        if(!row) continue;
-                        
-                        // Extract using regex for CSV
-                        const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                        if (matches && matches.length >= 4) {
-                            const title = matches[0].replace(/^"|"$/g, '');
-                            const desc = matches[1].replace(/^"|"$/g, '');
-                            const date = matches[2].replace(/^"|"$/g, '');
-                            const source = matches[3].replace(/^"|"$/g, '');
-                            
-                            combinedData.push({
-                                source: 'GNews',
-                                author: source || "Berita Lokal",
-                                text: `[BERITA] ${title} - ${desc}`,
-                                date: date,
-                                likes: 0
-                            });
-                        } else {
-                            // fallback if simple split fails
-                            const cols = row.split(',');
-                            combinedData.push({
-                                source: 'GNews',
-                                author: cols[cols.length-1] || "News",
-                                text: cols[0] || row,
-                                date: new Date().toISOString(),
-                                likes: 0
-                            });
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("Could not fetch GNews data:", e);
-        }
-        
-        if (combinedData.length === 0) {
-            container.innerHTML = '<div class="p-8 text-center text-on-surface-variant">Belum ada data dari API.</div>';
-            return;
-        }
-        
-        // Simple heuristic sentiment logic
-        const positiveWords = ['bagus', 'keren', 'mantap', 'terima kasih', 'lanjutkan', 'baik', 'dukung', 'maju', 'setuju', 'bantuan', 'bantu', 'kurangi'];
-        const negativeWords = ['jelek', 'rusak', 'korupsi', 'macet', 'lambat', 'parah', 'buruk', 'kecewa', 'mangkrak', 'bodoh', 'goblok', 'salah paham', 'banjir'];
-        
-        let posCount = 0;
-        let negCount = 0;
-        let netCount = 0;
-        
-        // Sort by date descending
-        combinedData.sort((a,b) => new Date(b.date) - new Date(a.date));
-        
-        const html = combinedData.map(item => {
-            const text = item.text || "";
-            const lowerText = text.toLowerCase();
-            
-            let sentiment = 'Netral';
-            let sentimentClass = 'sentiment-neutral text-on-surface-variant bg-surface-container-high';
-            
-            if (positiveWords.some(w => lowerText.includes(w))) {
-                sentiment = 'Positif';
-                sentimentClass = 'sentiment-positive text-primary bg-primary/10';
-                posCount++;
-            } else if (negativeWords.some(w => lowerText.includes(w))) {
-                sentiment = 'Negatif';
-                sentimentClass = 'sentiment-negative text-error bg-error/10';
-                negCount++;
-            } else {
-                netCount++;
-            }
-            
-            const initials = (item.author || "AN").substring(0,2).toUpperCase();
-            const dateStr = new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
-            
-            return `
-                <div class="p-4 border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-sm">${initials}</div>
-                            <div>
-                                <p class="font-label-lg text-label-lg">${item.author}</p>
-                                <p class="text-label-sm text-on-surface-variant">${dateStr} via ${item.source}</p>
-                            </div>
-                        </div>
-                        <span class="px-2 py-1 rounded text-label-sm font-bold ${sentimentClass}">${sentiment}</span>
-                    </div>
-                    <p class="text-body-md pl-11 text-on-surface">${text.replace(/\n/g, '<br>')}</p>
-                    <div class="pl-11 mt-2 flex gap-4">
-                        <button class="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-[16px]">thumb_up</span> ${item.likes}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        container.innerHTML = html;
-        
-        // Update stats
-        const total = combinedData.length;
-        document.getElementById('sentiment-positif-pct').innerText = ((posCount/total)*100).toFixed(1) + '%';
-        document.getElementById('sentiment-netral-pct').innerText = ((netCount/total)*100).toFixed(1) + '%';
-        document.getElementById('sentiment-negatif-pct').innerText = ((negCount/total)*100).toFixed(1) + '%';
-        
-        document.getElementById('sentiment-interaction-text').innerText = `Berdasarkan ${total} interaksi API (YouTube & GNews) minggu ini.`;
-        
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = `<div class="p-8 text-center text-error">Gagal memuat data API: ${err.message}</div>`;
+    let csvContent = "data:text/csv;charset=utf-8,Kecamatan,Skor Anomali,Status,Kategori Belanja\\n";
+    filteredData.forEach(k => {
+        const status = k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN';
+        const cats = k.kategori ? k.kategori.join(' & ') : '-';
+        csvContent += `${k.nama},${(k.skor*100).toFixed(1)}%,${status},${cats}\\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "laporan_anomali_apbd_surabaya.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show toast
+    const toast = document.getElementById('toast-notification');
+    const msg = document.getElementById('toast-message');
+    if(toast && msg) {
+        msg.innerText = "Data CSV berhasil diunduh!";
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
     }
 };
 
-// Override DOMContentLoaded
-window.loadYouTubeComments = window.loadApiData;
-// Call when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(window.loadYouTubeComments, 800);
-});
+window.printDashboard = function() {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Pustaka PDF sedang dimuat atau tidak tersedia. Pastikan koneksi internet aktif.");
+        return;
+    }
+    
+    let filteredData = KECAMATAN_ANOMALI.filter(k => {
+        const level = k.skor >= 0.75 ? 'High' : k.skor >= 0.5 ? 'Medium' : 'Low';
+        const levelMatch = window.heatmapLevelFilters.includes(level);
+        const catMatch = k.kategori && k.kategori.some(cat => window.heatmapKategoriFilters.includes(cat));
+        return levelMatch && catMatch;
+    });
+    
+    const doc = new window.jspdf.jsPDF();
+    doc.setFontSize(16);
+    doc.text("Laporan Deteksi Anomali APBD Surabaya", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.text(`Tanggal Unduh: ${new Date().toLocaleDateString('id-ID')}`, 14, 30);
+    doc.text(`Filter Level Aktif: ${window.heatmapLevelFilters.join(', ')}`, 14, 36);
+    doc.text(`Kategori Belanja Aktif: ${window.heatmapKategoriFilters.join(', ')}`, 14, 42);
+    
+    const tableData = filteredData.map((k, i) => {
+        const status = k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN';
+        const cats = k.kategori ? k.kategori.join(', ') : '-';
+        return [i + 1, k.nama, `${(k.skor*100).toFixed(1)}%`, status, cats];
+    });
+    
+    doc.autoTable({
+        startY: 50,
+        head: [['No', 'Kecamatan', 'Skor Anomali', 'Status', 'Pos Belanja Terindikasi']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [52, 168, 83] }, // primary color approximate
+        styles: { fontSize: 9 }
+    });
+    
+    doc.save("Laporan_Anomali_APBD_Surabaya.pdf");
+    
+    // Show toast
+    const toast = document.getElementById('toast-notification');
+    const msg = document.getElementById('toast-message');
+    if(toast && msg) {
+        msg.innerText = "Laporan PDF berhasil diunduh!";
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+    }
+};
+
+window.generateSmartInsight = function(filteredData) {
+    const banner = document.getElementById('smart-insight-banner');
+    const textEl = document.getElementById('smart-insight-text');
+    if (!banner || !textEl) return;
+    
+    if (filteredData.length === 0) {
+        textEl.innerText = "Tidak ada anomali yang terdeteksi pada filter saat ini.";
+        return;
+    }
+    
+    const kritisCount = filteredData.filter(k => k.skor >= 0.75).length;
+    if (kritisCount > 0) {
+        textEl.innerText = `⚠️ Terdapat ${kritisCount} kecamatan dengan anomali tingkat KRITIS. Area ini membutuhkan audit investigatif segera, khususnya pada pos belanja ${window.heatmapKategoriFilters.join(' dan ')}.`;
+        banner.className = "bg-error/10 border-b border-error/20 px-6 py-3 flex items-start gap-3 transition-all";
+        banner.querySelector('h4').className = "font-label-lg text-label-lg font-bold text-error mb-0.5";
+        banner.querySelector('span').className = "material-symbols-outlined text-error mt-0.5";
+    } else if (filteredData.length > 0) {
+        textEl.innerText = `💡 Terdapat ${filteredData.length} kecamatan dalam pantauan. Terus monitor pos belanja ${window.heatmapKategoriFilters.join(' dan ')} untuk mencegah pembengkakan anggaran.`;
+        banner.className = "bg-primary/10 border-b border-primary/20 px-6 py-3 flex items-start gap-3 transition-all";
+        banner.querySelector('h4').className = "font-label-lg text-label-lg font-bold text-primary mb-0.5";
+        banner.querySelector('span').className = "material-symbols-outlined text-primary mt-0.5";
+    }
+};
+
+window.originalKecamatanData = null;
+window.updateTimeSimulation = function(month) {
+    if (!window.originalKecamatanData) {
+        window.originalKecamatanData = JSON.parse(JSON.stringify(KECAMATAN_ANOMALI));
+    }
+    
+    document.getElementById('time-slider-label').innerText = `Bulan: ${month}`;
+    
+    const ratio = parseInt(month) / 12.0;
+    
+    KECAMATAN_ANOMALI.forEach((k, i) => {
+        const orig = window.originalKecamatanData[i];
+        const multiplier = ratio < 0.5 ? (ratio * 1.5) : (ratio * 1.5 + Math.pow(ratio, 3)*0.5);
+        k.skor = Math.min(1.0, orig.skor * multiplier);
+    });
+    
+    window.renderHeatmapLayer();
+    if(window.renderTop5Anomali) window.renderTop5Anomali();
+};
+
+window.openDrillDown = function(k) {
+    const panel = document.getElementById('drill-down-panel');
+    if (!panel) return;
+    
+    document.getElementById('dd-kecamatan-name').innerText = k.nama;
+    
+    const isHigh = k.skor >= 0.75;
+    const isMed = k.skor >= 0.5;
+    const colorClass = isHigh ? 'text-error' : isMed ? 'text-amber-600' : 'text-green-600';
+    const bgClass = isHigh ? 'bg-error' : isMed ? 'bg-amber-500' : 'bg-green-500';
+    const status = isHigh ? 'KRITIS' : isMed ? 'WASPADA' : 'AMAN';
+    
+    const statusEl = document.getElementById('dd-kecamatan-status');
+    statusEl.innerText = `Status: ${status}`;
+    statusEl.className = `font-label-sm text-label-sm mt-1 font-bold ${colorClass}`;
+    
+    const valEl = document.getElementById('dd-skor-value');
+    valEl.innerText = `${(k.skor*100).toFixed(1)}%`;
+    valEl.className = `font-title-lg ${colorClass}`;
+    
+    document.getElementById('dd-skor-bar').style.width = `${k.skor*100}%`;
+    document.getElementById('dd-skor-bar').className = `h-full rounded-full ${bgClass}`;
+    
+    const recEl = document.getElementById('dd-recommendation');
+    if(isHigh) {
+        recEl.innerText = `Lakukan audit investigatif segera pada pos belanja ${k.kategori.join(', ')}. Panggil PPK terkait untuk klarifikasi selisih anggaran sebesar Rp ${(Math.random()*500+200).toFixed(0)} Juta.`;
+    } else if(isMed) {
+        recEl.innerText = `Pantau ketat realisasi anggaran ${k.kategori.join(', ')} bulan depan. Mulai muncul deviasi harga satuan yang tidak wajar.`;
+    } else {
+        recEl.innerText = `Penggunaan anggaran normal. Lanjutkan pemantauan rutin.`;
+    }
+    
+    const vendors = [
+        ['CV. Karya Mandiri', 'Rp 450 Jt'],
+        ['PT. Sinar Jaya Abadi', 'Rp 320 Jt'],
+        ['CV. Makmur Sentosa', 'Rp 210 Jt'],
+        ['PT. Global Solusi', 'Rp 150 Jt']
+    ];
+    let vHtml = '';
+    for(let i=0; i < (isHigh ? 3 : isMed ? 2 : 1); i++) {
+        vHtml += `
+        <div class="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[16px]">storefront</span>
+                </div>
+                <div>
+                    <p class="font-label-md text-label-md text-on-surface">${vendors[i][0]}</p>
+                    <p class="font-body-sm text-[11px] text-on-surface-variant">Indikasi Mark-up Harga</p>
+                </div>
+            </div>
+            <span class="font-bold text-error">${vendors[i][1]}</span>
+        </div>`;
+    }
+    document.getElementById('dd-vendor-list').innerHTML = vHtml;
+    
+    panel.classList.remove('translate-x-full');
+};
+
+window.closeDrillDown = function() {
+    const panel = document.getElementById('drill-down-panel');
+    if (panel) {
+        panel.classList.add('translate-x-full');
+    }
+};
+
+window.openSettingsModal = function() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('#settings-modal-content').classList.remove('scale-95');
+        }, 10);
+    }
+};
+
+window.closeSettingsModal = function() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.classList.add('opacity-0');
+        modal.querySelector('#settings-modal-content').classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+};
+
+window.saveSettings = function() {
+    const btn = document.getElementById('btn-save-settings');
+    btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Menyimpan...`;
+    btn.classList.add('opacity-80', 'cursor-not-allowed');
+    
+    setTimeout(() => {
+        btn.innerHTML = `Simpan`;
+        btn.classList.remove('opacity-80', 'cursor-not-allowed');
+        window.closeSettingsModal();
+        
+        // Show success toast
+        const toast = document.getElementById('toast-notification');
+        const msg = document.getElementById('toast-message');
+        if(toast && msg) {
+            msg.innerText = "Konfigurasi Lakehouse Berhasil Disimpan!";
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+    }, 1500);
+};
 

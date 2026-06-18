@@ -1,26 +1,7 @@
-import http.server
-import socketserver
-import os
+import uvicorn
 import socket
 
 PORT = 8080
-
-class DashboardHandler(http.server.SimpleHTTPRequestHandler):
-    def translate_path(self, path):
-        # Base directory is the project root
-        base_dir = os.getcwd()
-        
-        # Route root to the dashboard index
-        if path == '/' or path == '/index.html':
-            return os.path.join(base_dir, 'src', 'dashboard', 'index.html')
-            
-        # Route dashboard assets directly
-        if path.startswith('/assets/'):
-            return os.path.join(base_dir, 'src', 'dashboard', path.lstrip('/'))
-            
-        # Everything else falls back to the default handler
-        # which correctly maps to the project root (e.g. /data/gold/...)
-        return super().translate_path(path)
 
 def get_local_ip():
     try:
@@ -32,15 +13,14 @@ def get_local_ip():
     except:
         return "127.0.0.1"
 
-# Allow reusing the port if restarting quickly
-socketserver.TCPServer.allow_reuse_address = True
-
-with http.server.ThreadingHTTPServer(("0.0.0.0", PORT), DashboardHandler) as httpd:
+if __name__ == "__main__":
     ip = get_local_ip()
     print("==================================================")
-    print(f"SmartBudget Dashboard is now LIVE!")
+    print(f"SmartBudget Dashboard & FastAPI is now LIVE!")
     print(f"   Akses melalui Localhost : http://localhost:{PORT}")
     print(f"   Akses melalui Jaringan  : http://{ip}:{PORT}")
     print("==================================================")
-    print("Tekan Ctrl+C untuk menghentikan server.")
-    httpd.serve_forever()
+    print("Menjalankan Uvicorn server...")
+    
+    # Run the FastAPI app via Uvicorn
+    uvicorn.run("src.api.main:app", host="0.0.0.0", port=PORT, reload=True)

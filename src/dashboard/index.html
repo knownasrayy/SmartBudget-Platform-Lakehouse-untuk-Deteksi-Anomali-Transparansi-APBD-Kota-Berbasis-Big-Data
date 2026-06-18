@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="assets/js/tailwind-config.js"></script>
 </head>
 <body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
@@ -90,13 +91,13 @@
 </div>
 </div>
 <div class="flex items-center gap-4">
-<button onclick="alert('Konfigurasi tidak aktif di Mode Simulasi.')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<button onclick="window.openSettingsModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant" title="Konfigurasi Kota">
 <span class="material-symbols-outlined">location_city</span>
 </button>
-<button onclick="alert('Konfigurasi tidak aktif di Mode Simulasi.')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
-<span class="material-symbols-outlined">calendar_today</span>
+<button onclick="window.openSettingsModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant" title="Pengaturan Sistem">
+<span class="material-symbols-outlined">settings</span>
 </button>
-<div onclick="alert('Profil Pengguna')" class="h-8 w-8 rounded-full bg-surface-variant flex items-center justify-center cursor-pointer hover:bg-surface-container transition-colors">
+<div onclick="window.openSettingsModal()" class="h-8 w-8 rounded-full bg-surface-variant flex items-center justify-center cursor-pointer hover:bg-surface-container transition-colors" title="Profil Pengguna">
 <span class="material-symbols-outlined text-primary">account_circle</span>
 </div>
 </div>
@@ -136,7 +137,7 @@
 </div>
 </div>
 <!-- KPI 2: Pos Belanja Janggal -->
-<div class="bg-error-container p-6 rounded-xl border border-red-200 flex flex-col justify-between group hover:shadow-lg transition-shadow">
+<div onclick="switchTab('heatmap_anomali')" class="bg-error-container p-6 rounded-xl border border-red-200 flex flex-col justify-between group cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all">
 <div class="flex justify-between items-start">
 <div class="p-3 bg-error text-on-error rounded-lg">
 <span class="material-symbols-outlined">warning</span>
@@ -151,7 +152,7 @@
 </div>
 </div>
 <!-- KPI 3: Sentimen Publik -->
-<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col justify-between group hover:shadow-lg transition-shadow">
+<div onclick="switchTab('analisis_sentimen')" class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col justify-between group cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all">
 <div class="flex justify-between items-start">
 <div class="p-3 bg-secondary-fixed rounded-lg text-secondary">
 <span class="material-symbols-outlined">forum</span>
@@ -171,7 +172,7 @@
 <!-- Middle Row: Visualizations -->
 <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 <!-- Heatmap Anomali -->
-<div class="lg:col-span-2 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col">
+<div onclick="switchTab('heatmap_anomali')" class="lg:col-span-2 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex flex-col cursor-pointer hover:shadow-md transition-all">
 <div class="flex justify-between items-center mb-6">
 <h4 class="font-title-md text-title-md">Heatmap Anomali Wilayah</h4>
 <span class="material-symbols-outlined text-outline cursor-pointer">more_vert</span>
@@ -209,17 +210,20 @@
 <div class="flex gap-2">
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input id="search-utama" class="pl-10 pr-4 py-2 border border-outline-variant rounded-full text-label-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Cari pos belanja..." type="text"/>
+<input id="search-utama" oninput="window.filterAnomalyTable()" class="pl-10 pr-4 py-2 border border-outline-variant rounded-full text-label-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-64" placeholder="Cari pos belanja..." type="text"/>
 </div>
-<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded-full hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined">filter_list</span>
-</button>
+<select id="filter-status-utama" onchange="window.filterAnomalyTable()" class="px-4 py-2 border border-outline-variant rounded-full text-label-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-surface text-on-surface cursor-pointer">
+    <option value="">Semua Status</option>
+    <option value="outlier">Outlier (Kritis)</option>
+    <option value="warning">Warning (Waspada)</option>
+</select>
 </div>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
 <thead class="bg-surface-container-low">
 <tr>
+<th class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider w-16">No</th>
 <th onclick="sortAnomalyTable('uraian_belanja')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Pos Belanja <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th onclick="sortAnomalyTable('jenis_pengadaan')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Kategori <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th onclick="sortAnomalyTable('realisasi')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-right cursor-pointer hover:text-primary select-none">Nominal <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
@@ -234,13 +238,8 @@
 </div>
 <div class="p-4 bg-surface-container-low flex items-center justify-between">
 <p id="anomaly-pagination-info" class="text-label-md text-on-surface-variant">Memuat data anomali...</p>
-<div class="flex gap-1">
-<button onclick="prevAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined text-[18px]">chevron_left</span>
-</button>
-<button onclick="nextAnomalyPage()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-white hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined text-[18px]">chevron_right</span>
-</button>
+<div class="flex gap-1" id="anomaly-pagination-controls">
+<!-- Injected by JS -->
 </div>
 </div>
 </section>
@@ -289,27 +288,49 @@
 <div class="pt-4 border-t border-outline-variant">
 <label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2 block">Level Anomali</label>
 <div class="grid grid-cols-1 gap-2">
-<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-error rounded-lg text-error font-label-lg">
+<button id="btn-anomali-high" onclick="window.toggleAnomalyFilter('High')" class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-error rounded-lg text-error font-label-lg transition-colors focus:outline-none">
 <span class="flex items-center gap-2">
 <span class="w-2 h-2 rounded-full bg-error"></span>
                                         High (Kritis)
                                     </span>
-<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span id="icon-anomali-high" class="material-symbols-outlined text-[16px]">check_circle</span>
 </button>
-<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-outline rounded-lg text-on-surface font-label-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+<button id="btn-anomali-medium" onclick="window.toggleAnomalyFilter('Medium')" class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-amber-500 rounded-lg text-amber-600 font-label-lg transition-colors focus:outline-none">
 <span class="flex items-center gap-2">
 <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                         Medium (Waspada)
                                     </span>
+<span id="icon-anomali-medium" class="material-symbols-outlined text-[16px]">check_circle</span>
 </button>
-<button class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-outline rounded-lg text-on-surface font-label-lg hover:border-secondary hover:text-secondary transition-colors">
+<button id="btn-anomali-low" onclick="window.toggleAnomalyFilter('Low')" class="flex items-center justify-between px-3 py-2 bg-surface-container-lowest border border-secondary rounded-lg text-secondary font-label-lg transition-colors focus:outline-none">
 <span class="flex items-center gap-2">
 <span class="w-2 h-2 rounded-full bg-secondary"></span>
                                         Low (Normal)
                                     </span>
+<span id="icon-anomali-low" class="material-symbols-outlined text-[16px]">check_circle</span>
 </button>
 </div>
 </div>
+</div>
+</section>
+
+<!-- Time-Slider (Lintasan Waktu Anomali) -->
+<section class="mb-4">
+<h3 class="font-title-md text-title-md text-primary mb-3 flex items-center gap-2">
+    <span class="material-symbols-outlined text-[20px]">history</span>
+    Simulasi Waktu
+</h3>
+<div class="space-y-2">
+    <div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+        <span id="time-slider-label">Bulan: 12 (Des)</span>
+        <span class="text-primary font-bold">2025</span>
+    </div>
+    <input type="range" id="time-slider" min="1" max="12" value="12" oninput="window.updateTimeSimulation(this.value)" class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary">
+    <div class="flex justify-between font-label-sm text-[10px] text-on-surface-variant/70 px-1 mt-1">
+        <span>Jan</span>
+        <span>Jun</span>
+        <span>Des</span>
+    </div>
 </div>
 </section>
 <section class="mt-auto">
@@ -338,12 +359,32 @@
                                 Grid View
                             </button>
 </div>
+<!-- Action Buttons: Export & Report -->
+<div class="flex items-center gap-2 border-l border-outline-variant pl-4 ml-2">
+    <button onclick="window.exportHeatmapCSV()" class="px-3 py-1.5 font-label-md text-label-md text-on-surface-variant border border-outline-variant rounded-md flex items-center gap-2 hover:bg-surface-container transition-colors" title="Unduh CSV">
+        <span class="material-symbols-outlined text-[16px]">download</span> CSV
+    </button>
+    <button onclick="window.printDashboard()" class="px-3 py-1.5 font-label-md text-label-md text-on-surface-variant border border-outline-variant rounded-md flex items-center gap-2 hover:bg-surface-container transition-colors" title="Cetak Peta PDF">
+        <span class="material-symbols-outlined text-[16px]">print</span> Print
+    </button>
+    <button onclick="window.openReportModal()" class="px-4 py-1.5 bg-error text-white font-label-md text-label-md rounded-md hover:bg-error/90 transition-colors shadow-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px]">add_alert</span> Lapor SKPD
+    </button>
+</div>
 </div>
 <div class="flex items-center gap-4 text-on-surface-variant font-label-md">
 <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-error"></span> &gt; Rp 500jt</span>
 <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-amber-500"></span> Rp 100-500jt</span>
 <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-secondary"></span> &lt; Rp 100jt</span>
 </div>
+</div>
+<!-- Smart Insight Generator Banner -->
+<div id="smart-insight-banner" class="bg-primary/10 border-b border-primary/20 px-6 py-3 flex items-start gap-3 transition-all">
+    <span class="material-symbols-outlined text-primary mt-0.5">smart_toy</span>
+    <div>
+        <h4 class="font-label-lg text-label-lg font-bold text-primary mb-0.5">AI Insight Generator</h4>
+        <p id="smart-insight-text" class="text-body-md text-on-surface-variant">Menganalisis pola anomali berdasarkan filter saat ini...</p>
+    </div>
 </div>
 <!-- Interactive Visualization Canvas -->
 <div class="flex-1 relative overflow-hidden bg-[#e5e7eb]">
@@ -383,85 +424,9 @@
 <h3 class="font-title-md text-title-md text-primary mb-1">Top 5 SKPD Berisiko</h3>
 <p class="font-label-sm text-label-sm text-on-surface-variant">Berdasarkan akumulasi nilai anomali</p>
 </div>
-<div id="top-5-wilayah-kritis" class="space-y-4">
-<!-- Rank 1 -->
-<div class="p-4 bg-surface-container-lowest rounded-xl border border-error/30 hover:border-error transition-colors cursor-pointer group">
-<div class="flex items-center justify-between mb-3">
-<span class="w-6 h-6 rounded bg-error text-on-error flex items-center justify-center font-bold text-xs">01</span>
-<span class="material-symbols-outlined text-error text-[20px]">warning</span>
+<div id="dynamic-top5-container" class="space-y-4">
+    <div class="p-4 text-center text-on-surface-variant"><span class="material-symbols-outlined animate-spin">sync</span></div>
 </div>
-<h4 class="font-title-md text-title-md mb-1">Rungkut</h4>
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Belanja Modal</span>
-<span class="font-bold text-error">Rp 12.4M</span>
-</div>
-<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
-<div class="bg-error h-full rounded-full w-[92%]"></div>
-</div>
-</div>
-<!-- Rank 2 -->
-<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-amber-500 transition-colors cursor-pointer group">
-<div class="flex items-center justify-between mb-3">
-<span class="w-6 h-6 rounded bg-amber-500 text-white flex items-center justify-center font-bold text-xs">02</span>
-<span class="material-symbols-outlined text-amber-500 text-[20px]">report</span>
-</div>
-<h4 class="font-title-md text-title-md mb-1">Wonokromo</h4>
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Honorarium</span>
-<span class="font-bold text-amber-600">Rp 8.1M</span>
-</div>
-<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
-<div class="bg-amber-500 h-full rounded-full w-[78%]"></div>
-</div>
-</div>
-<!-- Rank 3 -->
-<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
-<div class="flex items-center justify-between mb-3">
-<span class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-xs">03</span>
-<span class="material-symbols-outlined text-primary text-[20px]">info</span>
-</div>
-<h4 class="font-title-md text-title-md mb-1">Tegalsari</h4>
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Bansos</span>
-<span class="font-bold text-on-surface">Rp 5.2M</span>
-</div>
-<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
-<div class="bg-primary h-full rounded-full w-[64%]"></div>
-</div>
-</div>
-<!-- Rank 4 -->
-<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
-<div class="flex items-center justify-between mb-3">
-<span class="w-6 h-6 rounded bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-xs">04</span>
-</div>
-<h4 class="font-title-md text-title-md mb-1">Gubeng</h4>
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Belanja Jasa</span>
-<span class="font-bold text-on-surface">Rp 4.9M</span>
-</div>
-<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
-<div class="bg-primary h-full rounded-full w-[52%]"></div>
-</div>
-</div>
-<!-- Rank 5 -->
-<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
-<div class="flex items-center justify-between mb-3">
-<span class="w-6 h-6 rounded bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-xs">05</span>
-</div>
-<h4 class="font-title-md text-title-md mb-1">Sukolilo</h4>
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-on-surface-variant">Pemeliharaan</span>
-<span class="font-bold text-on-surface">Rp 3.7M</span>
-</div>
-<div class="w-full bg-surface-container mt-3 h-1.5 rounded-full overflow-hidden">
-<div class="bg-primary h-full rounded-full w-[41%]"></div>
-</div>
-</div>
-</div>
-<button class="mt-4 w-full py-3 bg-surface-container-high border border-outline-variant rounded-xl font-label-lg text-label-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
-                    Lihat Selengkapnya
-                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-</button>
 </div>
 </div>
 </div><!-- end tab-content-heatmap_anomali -->
@@ -476,11 +441,44 @@
 <p class="text-body-md text-on-surface-variant">Pemantauan opini publik terhadap alokasi anggaran APBD secara real-time.</p>
 </div>
 <div class="flex gap-2">
-<button class="flex items-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-lg text-label-lg hover:bg-surface-container-low transition-colors">
-<span class="material-symbols-outlined text-[20px]">filter_list</span>
-                            Filter Data
-                        </button>
-<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:opacity-90 transition-opacity">
+<div class="relative">
+    <button onclick="document.getElementById('sentiment-filter-panel').classList.toggle('hidden')" class="flex items-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-lg text-label-lg hover:bg-surface-container-low transition-colors outline-none focus:ring-2 focus:ring-primary">
+        <span class="material-symbols-outlined text-[20px]">filter_list</span>
+        Filter Data
+    </button>
+    <div id="sentiment-filter-panel" class="hidden absolute top-full left-0 mt-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 p-4">
+        <h4 class="font-label-lg font-bold text-on-surface mb-3">Filter Sentimen</h4>
+        
+        <div class="mb-4">
+            <label class="block text-label-sm text-on-surface-variant mb-2">Kata Kunci</label>
+            <input type="text" id="sentiment-filter-keyword" placeholder="Cari kata..." class="w-full bg-surface-container-highest border border-outline-variant rounded-md px-3 py-2 text-body-md text-on-surface focus:outline-none focus:border-primary">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-label-sm text-on-surface-variant mb-2">Sentimen</label>
+            <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-2 text-body-md text-on-surface cursor-pointer">
+                    <input type="checkbox" id="filter-cb-positif" checked class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary accent-[#005faf]">
+                    <span class="w-3 h-3 bg-secondary rounded-full"></span> Positif
+                </label>
+                <label class="flex items-center gap-2 text-body-md text-on-surface cursor-pointer">
+                    <input type="checkbox" id="filter-cb-negatif" checked class="w-4 h-4 rounded border-outline-variant text-error focus:ring-primary accent-[#ba1a1a]">
+                    <span class="w-3 h-3 bg-error rounded-full"></span> Negatif
+                </label>
+                <label class="flex items-center gap-2 text-body-md text-on-surface cursor-pointer">
+                    <input type="checkbox" id="filter-cb-netral" checked class="w-4 h-4 rounded border-outline-variant text-neutral-500 focus:ring-primary accent-[#757575]">
+                    <span class="w-3 h-3 bg-neutral-400 rounded-full"></span> Netral
+                </label>
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-outline-variant">
+            <button onclick="document.getElementById('sentiment-filter-panel').classList.add('hidden')" class="px-3 py-1.5 text-label-md font-bold text-secondary hover:bg-surface-container-high rounded-md transition-colors">Batal</button>
+            <button onclick="window.applySentimentFilter()" class="px-3 py-1.5 text-label-md font-bold bg-primary text-on-primary rounded-md shadow-sm hover:opacity-90 transition-opacity">Terapkan</button>
+        </div>
+    </div>
+</div>
+<button onclick="if(window.exportSentimentData) window.exportSentimentData();" class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg shadow-sm hover:opacity-90 transition-opacity">
 <span class="material-symbols-outlined text-[20px]">download</span>
                             Ekspor Laporan
                         </button>
@@ -523,67 +521,29 @@
 <!-- Sentiment Trend Line Chart -->
 <div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
 <div class="flex items-center justify-between mb-6">
-<h3 class="font-title-md text-title-md text-on-surface-variant">Tren Sentimen (30 Hari Terakhir)</h3>
+<div class="flex flex-col md:flex-row md:items-center justify-between w-full mb-4 gap-2">
+    <h3 class="font-title-md text-title-md text-on-surface-variant">Tren Sentimen</h3>
+    <div class="flex bg-surface-container-high rounded-lg p-1">
+        <button onclick="window.renderSentimentChart(window.sentimentData, 'day')" id="btn-chart-day" class="px-3 py-1 rounded-md text-label-sm font-bold bg-white shadow-sm text-primary transition-all">Harian</button>
+        <button onclick="window.renderSentimentChart(window.sentimentData, 'week')" id="btn-chart-week" class="px-3 py-1 rounded-md text-label-sm font-bold text-on-surface-variant hover:text-primary transition-all">Mingguan</button>
+        <button onclick="window.renderSentimentChart(window.sentimentData, 'month')" id="btn-chart-month" class="px-3 py-1 rounded-md text-label-sm font-bold text-on-surface-variant hover:text-primary transition-all">Bulanan</button>
+        <button onclick="window.renderSentimentChart(window.sentimentData, 'year')" id="btn-chart-year" class="px-3 py-1 rounded-md text-label-sm font-bold text-on-surface-variant hover:text-primary transition-all">Tahunan</button>
+    </div>
+</div>
 <div class="flex gap-2 text-label-md">
 <span class="flex items-center gap-1"><span class="w-3 h-3 bg-secondary rounded-full"></span> Positif</span>
 <span class="flex items-center gap-1"><span class="w-3 h-3 bg-error rounded-full"></span> Negatif</span>
 </div>
 </div>
-<div class="relative h-[240px] w-full flex items-end justify-between px-2">
-<!-- Simple Visual Chart Logic -->
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 40%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 55%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">1 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 35%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 62%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">5 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 60%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 30%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">10 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 25%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 75%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">15 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 30%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 85%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">20 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-error opacity-20 w-full rounded-t-sm" style="height: 45%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 65%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">25 Okt</div>
-</div>
-<div class="flex-1 flex flex-col justify-end gap-1 px-1 h-full">
-<div class="bg-secondary opacity-20 w-full rounded-t-sm" style="height: 20%"></div>
-<div class="bg-secondary w-full rounded-t-sm" style="height: 90%"></div>
-<div class="text-label-sm text-center mt-2 opacity-50">Skr</div>
-</div>
-<!-- SVG Path Overlay for Trend -->
-<svg class="absolute top-0 left-0 w-full h-[220px] pointer-events-none" preserveaspectratio="none" viewbox="0 0 100 100">
-<path d="M 0 60 Q 25 40 50 70 T 100 20" fill="none" stroke="#005faf" stroke-width="2"></path>
-<path d="M 0 80 Q 25 85 50 50 T 100 70" fill="none" stroke="#ba1a1a" stroke-dasharray="4" stroke-width="2"></path>
-</svg>
+<div class="relative h-[240px] w-full flex items-center justify-center px-2">
+<canvas id="sentiment-trend-chart"></canvas>
 </div>
 </div>
 <!-- Trending Topics / Word Cloud Alternative -->
 <div class="md:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
 <h3 class="font-title-md text-title-md text-on-surface-variant mb-6">Trending Topics</h3>
-<div class="flex flex-wrap gap-2">
-<span class="px-4 py-2 bg-secondary text-on-secondary rounded-full font-label-lg text-label-lg flex items-center gap-2">#PembangunanJalan <span class="bg-on-secondary/20 px-2 py-0.5 rounded text-[10px]">1.2k</span></span>
-<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#BeasiswaPrestasi <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">856</span></span>
-<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#TransparansiDana <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">642</span></span>
-<span class="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-lg text-label-lg flex items-center gap-2">#KorupsiProyek <span class="bg-on-error-container/10 px-2 py-0.5 rounded text-[10px]">520</span></span>
-<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#LampuJalan <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">412</span></span>
-<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#SampahKota <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">398</span></span>
-<span class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2">#RTHSurabaya <span class="bg-on-surface/10 px-2 py-0.5 rounded text-[10px]">215</span></span>
+<div id="trending-topics-container" class="flex flex-wrap gap-2">
+<span class="text-on-surface-variant text-label-sm italic">Menganalisis kata kunci viral...</span>
 </div>
 <div class="mt-8 space-y-4">
 <h4 class="text-label-md font-bold text-on-surface-variant uppercase tracking-widest">Sektor Paling Disorot</h4>
@@ -622,10 +582,10 @@
 <div class="md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
 <div class="p-6 border-b border-outline-variant flex items-center justify-between">
 <h3 class="font-title-md text-title-md text-on-surface-variant">Umpan Balik Publik Terbaru</h3>
-<div class="flex items-center gap-2 text-label-sm text-secondary font-bold">
-<span class="material-symbols-outlined text-[16px]">sync</span>
+<button onclick="if(window.refreshSentiment) window.refreshSentiment();" class="flex items-center gap-2 text-label-sm text-secondary font-bold hover:text-primary transition-colors cursor-pointer outline-none">
+<span class="material-symbols-outlined text-[16px] animate-spin-hover">sync</span>
                                 Live Updates
-                            </div>
+                            </button>
 </div>
 <div id="sentiment-feed-container" class="flex-1 overflow-y-auto max-h-[500px] p-0">
     <div class="p-8 text-center text-on-surface-variant flex flex-col items-center justify-center">
@@ -865,6 +825,9 @@
           </div>
       </div>
       <div class="flex items-center gap-4">
+          <a href="https://ckan.surabaya.go.id/dataset/" target="_blank" class="px-4 py-2 bg-secondary text-on-secondary rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+              <span class="material-symbols-outlined text-[18px]">open_in_new</span> Data Raw CKAN
+          </a>
           <button onclick="alert('Mengekspor laporan investigasi...')" class="px-4 py-2 bg-surface-container-highest text-on-surface rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-outline-variant transition-colors">
               <span class="material-symbols-outlined text-[18px]">download</span> Unduh Dossier
           </button>
@@ -1337,11 +1300,154 @@
 </div>
 
 </main>
+
+<!-- Buat Laporan Modal -->
+<div id="report-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden scale-95 transition-transform duration-300" id="report-modal-content">
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+            <h3 class="font-title-lg text-title-lg text-on-surface">Buat Laporan Baru</h3>
+            <button onclick="window.closeReportModal()" class="text-on-surface-variant hover:text-error transition-colors outline-none"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-label-sm font-bold text-on-surface-variant mb-1">Judul Laporan</label>
+                <input type="text" id="report-title" placeholder="Contoh: Investigasi Proyek RTH Sukolilo" class="w-full bg-surface-container-highest border border-outline-variant rounded-md px-3 py-2 text-body-md text-on-surface focus:outline-none focus:border-primary">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-label-sm font-bold text-on-surface-variant mb-1">Tingkat Urgensi</label>
+                    <select class="w-full bg-surface-container-highest border border-outline-variant rounded-md px-3 py-2 text-body-md text-on-surface focus:outline-none focus:border-primary">
+                        <option>Tinggi (Segera diproses)</option>
+                        <option>Sedang</option>
+                        <option>Rendah</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-label-sm font-bold text-on-surface-variant mb-1">SKPD Terkait</label>
+                    <select class="w-full bg-surface-container-highest border border-outline-variant rounded-md px-3 py-2 text-body-md text-on-surface focus:outline-none focus:border-primary">
+                        <option>Dinas Pekerjaan Umum</option>
+                        <option>Dinas Pendidikan</option>
+                        <option>Dinas Kesehatan</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-label-sm font-bold text-on-surface-variant mb-1">Deskripsi Singkat</label>
+                <textarea rows="4" placeholder="Jelaskan indikasi temuan anomali..." class="w-full bg-surface-container-highest border border-outline-variant rounded-md px-3 py-2 text-body-md text-on-surface focus:outline-none focus:border-primary"></textarea>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex justify-end gap-3">
+            <button onclick="window.closeReportModal()" class="px-4 py-2 font-label-lg text-label-lg text-secondary hover:bg-surface-variant rounded-lg transition-colors">Batal</button>
+            <button onclick="window.submitReport()" class="px-4 py-2 font-label-lg text-label-lg bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">send</span> Kirim Laporan</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface-container-highest text-on-surface px-6 py-3 rounded-full shadow-lg border border-outline-variant z-[3000] translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
+    <span class="material-symbols-outlined text-primary">check_circle</span>
+    <span id="toast-message" class="font-label-md">Berhasil!</span>
+</div>
+
 <!-- FAB Integration -->
-<button onclick="alert('Fitur Buat Laporan Baru akan tersedia di versi mendatang.')" title="Buat Laporan Baru" class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<button onclick="window.openReportModal()" title="Buat Laporan Baru" class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
 </button>
 
+<!-- Drill-Down Side Panel -->
+<div id="drill-down-panel" class="fixed right-0 top-0 h-full w-96 bg-surface shadow-2xl transform translate-x-full transition-transform duration-300 z-[2000] flex flex-col border-l border-outline-variant">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+        <div>
+            <h3 class="font-title-lg text-title-lg text-on-surface" id="dd-kecamatan-name">Nama Kecamatan</h3>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mt-1" id="dd-kecamatan-status">Status: KRITIS</p>
+        </div>
+        <button onclick="window.closeDrillDown()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant transition-colors">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <div class="p-6 flex-1 overflow-y-auto space-y-6 bg-surface-container-lowest">
+        <div>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Statistik Anomali</h4>
+            <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant">
+                <div class="flex justify-between items-end mb-1">
+                    <span class="text-label-md text-on-surface-variant">Skor Risiko</span>
+                    <span class="font-title-lg text-error" id="dd-skor-value">85%</span>
+                </div>
+                <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                    <div class="bg-error h-full rounded-full" id="dd-skor-bar" style="width: 85%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Top 3 Vendor Mencurigakan</h4>
+            <div class="space-y-3" id="dd-vendor-list">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+        
+        <div>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Rekomendasi Tindakan</h4>
+            <div class="bg-primary/10 border border-primary/20 p-4 rounded-xl">
+                <p class="text-body-md text-on-surface-variant" id="dd-recommendation">Lakukan audit investigatif pada pos belanja terkait.</p>
+            </div>
+        </div>
+    </div>
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest">
+        <button onclick="window.openReportModal()" class="w-full py-2.5 bg-error text-white font-label-lg rounded-lg hover:bg-error/90 transition-colors shadow-sm flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add_alert</span> Buka Form Investigasi
+        </button>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[5000] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="bg-surface w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="settings-modal-content">
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+            <h2 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary">settings</span> Pengaturan Sistem</h2>
+            <button onclick="window.closeSettingsModal()" class="text-on-surface-variant hover:bg-surface-container rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-5 bg-surface-container-lowest">
+            <div>
+                <label class="font-label-md text-label-md text-on-surface-variant block mb-2">Pilih Kota / Kabupaten</label>
+                <select class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                    <option>Surabaya</option>
+                    <option>Sidoarjo</option>
+                    <option>Gresik</option>
+                </select>
+            </div>
+            <div>
+                <label class="font-label-md text-label-md text-on-surface-variant block mb-2">Tahun Anggaran</label>
+                <select class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                    <option>2024</option>
+                    <option>2023</option>
+                    <option>2022</option>
+                </select>
+            </div>
+            <div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg bg-surface-container-low">
+                <div>
+                    <p class="font-label-lg text-on-surface">Koneksi Lakehouse</p>
+                    <p class="font-body-sm text-on-surface-variant">Menghubungkan ke API PySpark backend</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" value="" class="sr-only peer" checked>
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex justify-end gap-3">
+            <button onclick="window.closeSettingsModal()" class="px-4 py-2 font-label-lg text-label-lg text-secondary hover:bg-surface-variant rounded-lg transition-colors">Batal</button>
+            <button onclick="window.saveSettings()" id="btn-save-settings" class="px-4 py-2 font-label-lg text-label-lg bg-primary text-on-primary rounded-lg hover:opacity-90 transition-all flex items-center gap-2">
+                Simpan
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- jsPDF & AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="assets/js/main.js"></script>
 </body>
 </html>
