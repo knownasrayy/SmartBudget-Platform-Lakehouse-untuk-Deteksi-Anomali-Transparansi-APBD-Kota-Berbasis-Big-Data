@@ -1,0 +1,17 @@
+[Thu 06/18/2026 21:42:01.11] Memulai ingestion pipeline... 
+2026-06-18 21:42:01 [INFO] ==================================================
+2026-06-18 21:42:01 [INFO] SmartBudget — Data Ingestion Pipeline (Adel)
+2026-06-18 21:42:01 [INFO] ==================================================
+2026-06-18 21:42:01 [INFO] Mencoba ambil data APBD dari Open Data Surabaya...
+2026-06-18 21:42:02 [WARNING] Open Data Surabaya gagal: Expecting value: line 1 column 1 (char 0) \u2192 beralih ke fallback
+2026-06-18 21:42:02 [INFO] Generating data APBD realistis (fallback mode)...
+2026-06-18 21:42:02 [INFO] Generated 150 baris | Anomali: 20 baris
+2026-06-18 21:42:02 [INFO] Saved APBD \u2192 D:\SmartBudget-Platform-Lakehouse-untuk-Deteksi-Anomali-Transparansi-APBD-Kota-Berbasis-Big-Data\data\bronze\raw\apbd_surabaya_20260618.csv
+2026-06-18 21:42:02 [INFO] Menyiapkan data teks NLP (berita + tweet)...
+2026-06-18 21:42:02 [INFO] Loaded 10 teks NLP
+2026-06-18 21:42:02 [INFO] Saved NLP  \u2192 D:\SmartBudget-Platform-Lakehouse-untuk-Deteksi-Anomali-Transparansi-APBD-Kota-Berbasis-Big-Data\data\bronze\raw\nlp_texts_surabaya_20260618.csv
+2026-06-18 21:42:02 [INFO] ==================================================
+2026-06-18 21:42:02 [INFO] \u2705 Ingestion selesai! Total APBD: 150 baris | NLP: 10 baris
+2026-06-18 21:42:02 [INFO] \U0001f4c1 Output folder: D:\SmartBudget-Platform-Lakehouse-untuk-Deteksi-Anomali-Transparansi-APBD-Kota-Berbasis-Big-Data\data\bronze\raw
+2026-06-18 21:42:02 [INFO] ==================================================
+[Thu 06/18/2026 21:42:02.49] Ingestion selesai. 

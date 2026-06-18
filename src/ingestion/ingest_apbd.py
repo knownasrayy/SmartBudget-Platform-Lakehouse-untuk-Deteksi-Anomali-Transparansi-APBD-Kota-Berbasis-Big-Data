@@ -1,47 +1,53 @@
 """
-Adel - Data Ingestion Script
-Sumber: Dataset APBD publik via requests + BeautifulSoup
-Output: data/bronze/apbd_surabaya_raw.csv
+Adel - Data Ingestion Script (Milestone 2)
+Sumber: APBD publik (Open Data Surabaya) + fallback simulasi realistis
+Output: data/bronze/raw/apbd_surabaya_<YYYYMMDD>.csv
+        data/bronze/raw/nlp_texts_<YYYYMMDD>.csv
 """
 
 import requests
 import pandas as pd
-from bs4 import BeautifulSoup
-import json
 import os
+import random
+import logging
 from datetime import datetime
 
-# ── Path output ke bronze layer ──────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-BRONZE_DIR = os.path.join(BASE_DIR, "data", "bronze")
-os.makedirs(BRONZE_DIR, exist_ok=True)
+# ── Logging setup ─────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+log = logging.getLogger(__name__)
 
-# ── 1. Ambil data APBD dari Open Data Surabaya ───────────────────────────────
+# ── Path setup ────────────────────────────────────────────────────────────────
+BASE_DIR   = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BRONZE_RAW = os.path.join(BASE_DIR, "data", "bronze", "raw")
+os.makedirs(BRONZE_RAW, exist_ok=True)
+
+TIMESTAMP = datetime.now().strftime("%Y%m%d")
+KOTA      = "surabaya"
+
+# ── 1. Coba ambil data real dari Open Data Surabaya ───────────────────────────
 def fetch_apbd_opendata():
-    print("[1/2] Mengambil data APBD dari Open Data Surabaya...")
+    log.info("Mencoba ambil data APBD dari Open Data Surabaya...")
     url = "https://opendata.surabaya.go.id/api/3/action/datastore_search"
-    params = {
-        "resource_id": "8a6a8a0a-3b3b-4b4b-8b8b-0b0b0b0b0b0b",  # akan di-replace
-        "limit": 100
-    }
+    params = {"resource_id": "8a6a8a0a-3b3b-4b4b-8b8b-0b0b0b0b0b0b", "limit": 100}
     try:
         resp = requests.get(url, params=params, timeout=10)
         data = resp.json()
         if data.get("success") and data["result"]["records"]:
             df = pd.DataFrame(data["result"]["records"])
-            print(f"   ✓ Berhasil ambil {len(df)} baris dari Open Data Surabaya")
+            log.info(f"Berhasil ambil {len(df)} baris dari Open Data Surabaya")
             return df
-        else:
-            raise ValueError("Data kosong atau endpoint berubah")
+        raise ValueError("Data kosong atau endpoint tidak valid")
     except Exception as e:
-        print(f"   ✗ Gagal: {e}")
+        log.warning(f"Open Data Surabaya gagal: {e} → beralih ke fallback")
         return None
 
-# ── 2. Fallback — simulasi data realistis APBD Surabaya ──────────────────────
+# ── 2. Fallback — generate data simulasi realistis ────────────────────────────
 def generate_realistic_apbd():
-    print("[1/2] Generating data APBD realistis (fallback)...")
-    
-    import random
+    log.info("Generating data APBD realistis (fallback mode)...")
     random.seed(42)
 
     skpd_list = [
@@ -49,9 +55,16 @@ def generate_realistic_apbd():
         "Dinas Perhubungan", "Dinas Sosial", "BPBD", "Dinas Lingkungan Hidup",
         "Sekretariat Daerah", "Dinas Kependudukan", "Dinas Pariwisata"
     ]
-    kategori_list = [
+    jenis_belanja_list = [
         "Belanja Pegawai", "Belanja Barang & Jasa", "Belanja Modal",
         "Belanja Perjalanan Dinas", "Belanja Hibah"
+    ]
+    kegiatan_list = [
+        "Pengadaan Alat Tulis Kantor", "Perjalanan Dinas Luar Negeri",
+        "Pembangunan Gedung Kantor", "Rehabilitasi Jalan Lingkungan",
+        "Pengadaan Kendaraan Dinas", "Pelatihan SDM Aparatur",
+        "Pengadaan Seragam Pegawai", "Studi Banding ke Luar Daerah",
+        "Pembangunan Drainase", "Pengadaan Peralatan Medis"
     ]
     kecamatan_list = [
         "Tambaksari", "Gubeng", "Rungkut", "Wonokromo", "Tenggilis Mejoyo",
@@ -60,82 +73,97 @@ def generate_realistic_apbd():
 
     rows = []
     for i in range(150):
-        anggaran = random.randint(50_000_000, 5_000_000_000)
-        # Sisipkan 10% anomali (nilai ekstrem)
-        if random.random() < 0.10:
-            realisasi = int(anggaran * random.uniform(1.4, 2.5))  # markup janggal
+        pagu = random.randint(50_000_000, 5_000_000_000)
+        is_anomali = random.random() < 0.10
+        if is_anomali:
+            realisasi = int(pagu * random.uniform(1.4, 2.5))
+            status = "ANOMALI"
         else:
-            realisasi = int(anggaran * random.uniform(0.6, 1.05))
+            realisasi = int(pagu * random.uniform(0.6, 1.05))
+            status = "NORMAL"
 
         rows.append({
-            "id": f"APBD-2025-{i+1:04d}",
-            "tahun": 2025,
-            "skpd": random.choice(skpd_list),
-            "kecamatan": random.choice(kecamatan_list),
-            "kategori_belanja": random.choice(kategori_list),
-            "anggaran": anggaran,
-            "realisasi": realisasi,
-            "selisih": realisasi - anggaran,
-            "persen_realisasi": round(realisasi / anggaran * 100, 2),
-            "tanggal_input": f"2025-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
-            "sumber": "Simulasi SIPD Surabaya 2025"
+            "id_transaksi"        : f"APBD-{KOTA.upper()}-2025-{i+1:04d}",
+            "tanggal_scraping"    : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "kota"                : "Surabaya",
+            "nama_skpd"           : random.choice(skpd_list),
+            "kecamatan"           : random.choice(kecamatan_list),
+            "jenis_belanja"       : random.choice(jenis_belanja_list),
+            "nama_kegiatan"       : random.choice(kegiatan_list),
+            "pagu_anggaran"       : pagu,
+            "realisasi"           : realisasi,
+            "selisih"             : realisasi - pagu,
+            "persentase_realisasi": round(realisasi / pagu * 100, 2),
+            "tahun_anggaran"      : 2025,
+            "sumber_data"         : "Simulasi SIPD Surabaya 2025",
+            "status"              : status,
         })
 
     df = pd.DataFrame(rows)
-    print(f"   ✓ Generated {len(df)} baris data APBD realistis")
+    log.info(f"Generated {len(df)} baris | Anomali: {df[df.status=='ANOMALI'].shape[0]} baris")
     return df
 
-# ── 3. Ambil berita via NewsAPI (opsional, butuh API key) ────────────────────
-def fetch_news_headlines():
-    print("[2/2] Mengambil sample teks berita/tweet untuk NLP...")
-
-    # Sample teks manual — realistis dari konteks Surabaya
+# ── 3. Data teks NLP (berita + tweet) ─────────────────────────────────────────
+def generate_nlp_texts():
+    log.info("Menyiapkan data teks NLP (berita + tweet)...")
     sample_texts = [
-        {"id": "TW-001", "sumber": "Twitter/X", "teks": "Pipa PDAM di jalan MERR bocor lagi, air macet total sudah 3 hari. Laporan diabaikan terus! #Surabaya", "tanggal": "2025-09-10"},
-        {"id": "TW-002", "sumber": "Twitter/X", "teks": "Anggaran perjalanan dinas Pemkot Surabaya 2025 naik 300%? Kemana transparansinya? #APBD #Korupsi", "tanggal": "2025-09-11"},
-        {"id": "TW-003", "sumber": "Twitter/X", "teks": "Jalan Raya Darmo sudah diperbaiki, terima kasih Pemkot! Semoga tahan lama tidak seperti tahun lalu.", "tanggal": "2025-09-12"},
-        {"id": "TW-004", "sumber": "Twitter/X", "teks": "Demo mahasiswa SPM-MP soal APBD Surabaya 2025 janggal. Ratusan miliar entah kemana.", "tanggal": "2025-09-13"},
-        {"id": "TW-005", "sumber": "Twitter/X", "teks": "Pelayanan Dispendukcapil Surabaya makin bagus, antrian online sangat membantu warga.", "tanggal": "2025-09-14"},
-        {"id": "NEWS-001", "sumber": "Berita", "teks": "KPK mengendus dugaan markup anggaran belanja modal Dinas PU Surabaya senilai Rp 200 miliar.", "tanggal": "2025-09-15"},
-        {"id": "NEWS-002", "sumber": "Berita", "teks": "Pemkot Surabaya raih penghargaan Smart City terbaik dari Kemendagri untuk kategori tata kelola digital.", "tanggal": "2025-09-16"},
-        {"id": "NEWS-003", "sumber": "Berita", "teks": "Warga Kenjeran keluhkan banjir rob yang makin parah, drainase tidak kunjung diperbaiki.", "tanggal": "2025-09-17"},
-        {"id": "NEWS-004", "sumber": "Berita", "teks": "BPK menemukan 47 temuan ketidaksesuaian dalam laporan keuangan APBD Surabaya 2024.", "tanggal": "2025-09-18"},
-        {"id": "NEWS-005", "sumber": "Berita", "teks": "Program beasiswa Pemkot Surabaya disambut antusias warga, 5000 pelajar mendaftar.", "tanggal": "2025-09-19"},
+        {"id_transaksi": "TW-001", "sumber_data": "Twitter/X", "kota": "Surabaya",
+         "teks": "Pipa PDAM di jalan MERR bocor lagi, air macet total sudah 3 hari. Laporan diabaikan terus! #Surabaya",
+         "tanggal_scraping": "2025-09-10", "status": "RAW"},
+        {"id_transaksi": "TW-002", "sumber_data": "Twitter/X", "kota": "Surabaya",
+         "teks": "Anggaran perjalanan dinas Pemkot Surabaya 2025 naik 300%? Kemana transparansinya? #APBD #Korupsi",
+         "tanggal_scraping": "2025-09-11", "status": "RAW"},
+        {"id_transaksi": "TW-003", "sumber_data": "Twitter/X", "kota": "Surabaya",
+         "teks": "Jalan Raya Darmo sudah diperbaiki, terima kasih Pemkot! Semoga tahan lama tidak seperti tahun lalu.",
+         "tanggal_scraping": "2025-09-12", "status": "RAW"},
+        {"id_transaksi": "TW-004", "sumber_data": "Twitter/X", "kota": "Surabaya",
+         "teks": "Demo mahasiswa SPM-MP soal APBD Surabaya 2025 janggal. Ratusan miliar entah kemana.",
+         "tanggal_scraping": "2025-09-13", "status": "RAW"},
+        {"id_transaksi": "TW-005", "sumber_data": "Twitter/X", "kota": "Surabaya",
+         "teks": "Pelayanan Dispendukcapil Surabaya makin bagus, antrian online sangat membantu warga.",
+         "tanggal_scraping": "2025-09-14", "status": "RAW"},
+        {"id_transaksi": "NEWS-001", "sumber_data": "Berita", "kota": "Surabaya",
+         "teks": "KPK mengendus dugaan markup anggaran belanja modal Dinas PU Surabaya senilai Rp 200 miliar.",
+         "tanggal_scraping": "2025-09-15", "status": "RAW"},
+        {"id_transaksi": "NEWS-002", "sumber_data": "Berita", "kota": "Surabaya",
+         "teks": "Pemkot Surabaya raih penghargaan Smart City terbaik dari Kemendagri untuk kategori tata kelola digital.",
+         "tanggal_scraping": "2025-09-16", "status": "RAW"},
+        {"id_transaksi": "NEWS-003", "sumber_data": "Berita", "kota": "Surabaya",
+         "teks": "Warga Kenjeran keluhkan banjir rob yang makin parah, drainase tidak kunjung diperbaiki.",
+         "tanggal_scraping": "2025-09-17", "status": "RAW"},
+        {"id_transaksi": "NEWS-004", "sumber_data": "Berita", "kota": "Surabaya",
+         "teks": "BPK menemukan 47 temuan ketidaksesuaian dalam laporan keuangan APBD Surabaya 2024.",
+         "tanggal_scraping": "2025-09-18", "status": "RAW"},
+        {"id_transaksi": "NEWS-005", "sumber_data": "Berita", "kota": "Surabaya",
+         "teks": "Program beasiswa Pemkot Surabaya disambut antusias warga, 5000 pelajar mendaftar.",
+         "tanggal_scraping": "2025-09-19", "status": "RAW"},
     ]
-
     df = pd.DataFrame(sample_texts)
-    print(f"   ✓ Loaded {len(df)} sample teks untuk NLP pipeline")
+    log.info(f"Loaded {len(df)} teks NLP")
     return df
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("=" * 55)
-    print("  SmartBudget — Data Ingestion (Adel)")
-    print(f"  Waktu: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 55)
+    log.info("=" * 50)
+    log.info("SmartBudget — Data Ingestion Pipeline (Adel)")
+    log.info("=" * 50)
 
-    # APBD data
+    # — APBD —
     df_apbd = fetch_apbd_opendata()
     if df_apbd is None:
         df_apbd = generate_realistic_apbd()
 
-    out_apbd = os.path.join(BRONZE_DIR, "apbd_surabaya_raw.csv")
+    out_apbd = os.path.join(BRONZE_RAW, f"apbd_{KOTA}_{TIMESTAMP}.csv")
     df_apbd.to_csv(out_apbd, index=False, encoding="utf-8-sig")
-    print(f"\n   → Saved: {out_apbd}")
+    log.info(f"Saved APBD → {out_apbd}")
 
-    # News/tweet data
-    df_news = fetch_news_headlines()
-    out_news = os.path.join(BRONZE_DIR, "tweets_berita_raw.csv")
-    df_news.to_csv(out_news, index=False, encoding="utf-8-sig")
-    print(f"   → Saved: {out_news}")
+    # — NLP texts —
+    df_nlp = generate_nlp_texts()
+    out_nlp = os.path.join(BRONZE_RAW, f"nlp_texts_{KOTA}_{TIMESTAMP}.csv")
+    df_nlp.to_csv(out_nlp, index=False, encoding="utf-8-sig")
+    log.info(f"Saved NLP  → {out_nlp}")
 
-    print("\n" + "=" * 55)
-    print("  ✅ Ingestion selesai! Cek folder data/bronze/")
-    print("=" * 55)
-
-    # Preview
-    print("\nPreview APBD (5 baris pertama):")
-    print(df_apbd.head())
-    print(f"\nTotal baris APBD  : {len(df_apbd)}")
-    print(f"Total baris NLP   : {len(df_news)}")
-    print(f"Anomali terdeteksi: {len(df_apbd[df_apbd['persen_realisasi'] > 130])} baris (realisasi > 130% anggaran)")
+    log.info("=" * 50)
+    log.info(f"✅ Ingestion selesai! Total APBD: {len(df_apbd)} baris | NLP: {len(df_nlp)} baris")
+    log.info(f"📁 Output folder: {BRONZE_RAW}")
+    log.info("=" * 50)
