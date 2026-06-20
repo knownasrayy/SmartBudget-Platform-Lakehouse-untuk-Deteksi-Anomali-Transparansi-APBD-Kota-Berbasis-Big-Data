@@ -257,7 +257,7 @@ def generate_apbd_data(
     if save:
         out_path = SILVER_DIR / "silver_apbd_belanja.csv"
         df.to_csv(out_path, index=False)
-        print(f"[DataGen] Saved → {out_path}")
+        print(f"[DataGen] Saved -> {out_path}")
         print(f"[DataGen]   Total rows   : {len(df)}")
         print(f"[DataGen]   Anomalies    : {df['is_anomaly_injected'].sum()} ({anomaly_rate*100:.0f}%)")
         print(f"[DataGen]   Anomaly types: {df[df['is_anomaly_injected']]['anomaly_type'].value_counts().to_dict()}")

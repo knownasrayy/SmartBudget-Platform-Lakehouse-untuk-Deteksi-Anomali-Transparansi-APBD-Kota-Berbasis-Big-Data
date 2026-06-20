@@ -20,3 +20,11 @@ data/**/*.csv
 data/**/*.png
 data/**/*.html
 !data/**/.gitkeep
+
+# Big Data & Spark output
+hadoop/
+data/**/*.delta/
+data/**/*.parquet
+data/**/*.crc
+data/**/*.json
+

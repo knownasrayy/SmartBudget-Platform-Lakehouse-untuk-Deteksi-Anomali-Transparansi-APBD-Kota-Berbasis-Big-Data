@@ -18,49 +18,81 @@ os.makedirs(BRONZE_DIR, exist_ok=True)
 
 # ── 1. Ambil data APBD dari Open Data Surabaya ───────────────────────────────
 def fetch_apbd_opendata():
-    print("[1/2] Mengambil data APBD dari Open Data Surabaya...")
-    url = "https://ckan.surabaya.go.id/id/api/3/action/datastore_search"
-    params = {
-        "resource_id": "99b77d74-884a-4829-b905-d136cd99ee8f",
-        "limit": 500
-    }
+    print("[1/2] Mengambil SEMUA data APBD dari Open Data Surabaya (2023-2026)...")
+    dataset_url = "https://ckan.surabaya.go.id/api/3/action/package_show?id=6bcf082f-6ee8-44e3-8ab5-d85f7d43ba71"
+    
     try:
-        resp = requests.get(url, params=params, timeout=20)
-        data = resp.json()
-        if data.get("success") and data["result"]["records"]:
-            raw_df = pd.DataFrame(data["result"]["records"])
-            print(f"   [OK] Data asli berhasil diambil! Total: {len(raw_df)} baris")
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
+        # Get all resources in the dataset
+        resp = requests.get(dataset_url, verify=False, timeout=20)
+        dataset_data = resp.json()
+        if not dataset_data.get("success"):
+            raise ValueError("Gagal mendapatkan dataset CKAN")
             
-            # Memetakan kolom ke format Lakehouse kita
-            mapped_rows = []
-            import random
-            random.seed(42)
-            kecamatan_list = ["Tambaksari", "Gubeng", "Rungkut", "Wonokromo", "Tenggilis Mejoyo", "Sukolilo", "Mulyorejo", "Bulak", "Kenjeran", "Semampir"]
+        resources = dataset_data["result"]["resources"]
+        print(f"   -> Ditemukan {len(resources)} tabel (resources) di CKAN.")
+        
+        mapped_rows = []
+        import random
+        random.seed(42)
+        kecamatan_list = ["Tambaksari", "Gubeng", "Rungkut", "Wonokromo", "Tenggilis Mejoyo", "Sukolilo", "Mulyorejo", "Bulak", "Kenjeran", "Semampir"]
+        
+        row_id_counter = 1
+        
+        for res in resources:
+            res_id = res["id"]
+            res_name = res.get("name", "Unknown")
+            print(f"      Mengambil data dari: {res_name} ({res_id})")
             
-            for idx, row in raw_df.iterrows():
-                anggaran = float(row.get("target_pendapatan_berdasarkan_apbd", 0))
-                realisasi = float(row.get("realisasi_apbd", 0))
-                selisih = realisasi - anggaran
-                persen = (realisasi / anggaran * 100) if anggaran > 0 else 0.0
+            search_url = f"https://ckan.surabaya.go.id/api/3/action/datastore_search?resource_id={res_id}&limit=1000"
+            search_resp = requests.get(search_url, verify=False, timeout=20)
+            search_data = search_resp.json()
+            
+            if search_data.get("success") and search_data["result"]["records"]:
+                records = search_data["result"]["records"]
                 
-                mapped_rows.append({
-                    "id": f"APBD-REAL-{idx+1:04d}",
-                    "tahun": 2024,
-                    "skpd": row.get("pd_penghasil", "Tidak Diketahui"),
-                    "kecamatan": random.choice(kecamatan_list), # Dummy utk heatmap mapping
-                    "kategori_belanja": row.get("jenis_pendapatan_daerah_per_sektor", "Lainnya"),
-                    "anggaran": anggaran,
-                    "realisasi": realisasi,
-                    "selisih": selisih,
-                    "persen_realisasi": round(persen, 2),
-                    "tanggal_input": f"2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
-                    "sumber": "Open Data Surabaya (CKAN API)"
-                })
+                # Extract year/month context if possible from created date
+                created_date = res.get("created", "2024-01-01")[:10]
+                year_context = int(created_date[:4])
                 
+                for row in records:
+                    def safe_float(v):
+                        if not v or v == "-": return 0.0
+                        try: return float(v)
+                        except: return 0.0
+                        
+                    anggaran = safe_float(row.get("target_pendapatan_berdasarkan_apbd", 0))
+                    realisasi = safe_float(row.get("realisasi_apbd", 0))
+                    if anggaran == 0 and realisasi == 0:
+                        continue # Skip empty rows
+                        
+                    selisih = realisasi - anggaran
+                    persen = (realisasi / anggaran * 100) if anggaran > 0 else 0.0
+                    
+                    mapped_rows.append({
+                        "id": f"APBD-REAL-{row_id_counter:05d}",
+                        "tahun": year_context,
+                        "skpd": row.get("pd_penghasil", "Tidak Diketahui"),
+                        "kecamatan": random.choice(kecamatan_list), # Dummy utk heatmap mapping
+                        "kategori_belanja": row.get("jenis_pendapatan_daerah_per_sektor", "Lainnya"),
+                        "anggaran": anggaran,
+                        "realisasi": realisasi,
+                        "selisih": selisih,
+                        "persen_realisasi": round(persen, 2),
+                        "tanggal_input": created_date,
+                        "sumber": "Open Data Surabaya (CKAN API)"
+                    })
+                    row_id_counter += 1
+        
+        if mapped_rows:
             df = pd.DataFrame(mapped_rows)
+            print(f"   [OK] Total data asli berhasil ditarik: {len(df)} baris dari seluruh periode!")
             return df
         else:
-            raise ValueError("Data kosong atau endpoint berubah")
+            raise ValueError("Semua resource kosong")
+            
     except Exception as e:
         print(f"   [X] Gagal: {e}")
         return None
@@ -151,13 +183,13 @@ if __name__ == "__main__":
 
     out_apbd = os.path.join(BRONZE_DIR, f"apbd_surabaya_raw_{timestamp_str}.csv")
     df_apbd.to_csv(out_apbd, index=False, encoding="utf-8-sig")
-    print(f"\n   → Saved: {out_apbd}")
+    print(f"\n   -> Saved: {out_apbd}")
 
     # News/tweet data
     df_news = fetch_news_headlines()
     out_news = os.path.join(BRONZE_DIR, f"tweets_berita_raw_{timestamp_str}.csv")
     df_news.to_csv(out_news, index=False, encoding="utf-8-sig")
-    print(f"   → Saved: {out_news}")
+    print(f"   -> Saved: {out_news}")
 
     print("\n" + "=" * 55)
     print("  ✅ Ingestion selesai! Cek folder data/bronze/")

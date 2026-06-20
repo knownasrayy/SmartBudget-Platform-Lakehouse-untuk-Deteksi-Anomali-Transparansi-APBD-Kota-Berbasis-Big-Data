@@ -1,7 +1,7 @@
 // ---- SURABAYA KECAMATAN HEATMAP DATA (real coordinates) ----
 // [lat, lng, intensity] — intensity based on anomaly score weighting
 const SURABAYA_CENTER = [-7.2575, 112.7521];
-const KECAMATAN_ANOMALI = [
+const KECAMATAN_ANOMALI = window.KECAMATAN_ANOMALI || [
     // Nama, lat, lng, skor (0-1 = rendah, 1+ = tinggi)
     { nama: 'Wonokromo',    lat: -7.3102, lng: 112.7350, skor: 0.95 },
     { nama: 'Tegalsari',    lat: -7.2720, lng: 112.7338, skor: 0.88 },
@@ -1116,7 +1116,7 @@ function createAnomalyRow(row, index = '-') {
     tr.className = 'hover:bg-surface-container transition-colors';
     
     let score = parseFloat(row.anomaly_score || 0);
-    let statusLabel = score > 0.6 ? 
+    let statusLabel = (score > 0.4 || String(row.is_flagged) === '1') ? 
         '<span class="px-3 py-1 bg-error text-on-error rounded-full text-label-sm font-bold uppercase tracking-tighter">OUTLIER</span>' : 
         '<span class="px-3 py-1 bg-amber-500 text-white rounded-full text-label-sm font-bold uppercase tracking-tighter">WARNING</span>';
     
