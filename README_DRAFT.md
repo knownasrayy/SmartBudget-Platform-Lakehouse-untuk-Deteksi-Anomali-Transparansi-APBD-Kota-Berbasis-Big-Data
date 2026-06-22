@@ -42,14 +42,14 @@ Pengawasan Anggaran Pendapatan dan Belanja Daerah (APBD) secara manual sangat ti
 
 ```mermaid
 flowchart TD
-    %% Define styles
-    classDef source fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef bronze fill:#cd7f32,stroke:#333,stroke-width:2px,color:#fff;
-    classDef silver fill:#c0c0c0,stroke:#333,stroke-width:2px;
-    classDef gold fill:#ffd700,stroke:#333,stroke-width:2px;
-    classDef ml fill:#8a2be2,stroke:#333,stroke-width:2px,color:#fff;
-    classDef api fill:#4caf50,stroke:#333,stroke-width:2px,color:#fff;
-    classDef ui fill:#2196f3,stroke:#333,stroke-width:2px,color:#fff;
+    %% Define styles with dark-mode safe colors
+    classDef source fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#fff;
+    classDef bronze fill:#cd7f32,stroke:#8a5a22,stroke-width:2px,color:#fff;
+    classDef silver fill:#7f8c8d,stroke:#bdc3c7,stroke-width:2px,color:#fff;
+    classDef gold fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#fff;
+    classDef ml fill:#8e44ad,stroke:#9b59b6,stroke-width:2px,color:#fff;
+    classDef api fill:#27ae60,stroke:#2ecc71,stroke-width:2px,color:#fff;
+    classDef ui fill:#2980b9,stroke:#3498db,stroke-width:2px,color:#fff;
 
     %% Data Sources
     subgraph sources [Data Sources]
