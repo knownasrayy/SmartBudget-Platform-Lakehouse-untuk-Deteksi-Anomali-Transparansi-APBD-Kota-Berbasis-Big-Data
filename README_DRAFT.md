@@ -187,13 +187,46 @@ Akses Dashboard secara interaktif di browser Anda melalui: **http://localhost:80
 
 ---
 
-## Langkah Pengerjaan (Methodology)
+## Langkah Pengerjaan & Reproduksi (Methodology)
 
-1. **Pengumpulan Data (Data Ingestion)**: Menggunakan Python untuk meng-*generate* dataset sintetis APBD dan menarik data dari LPSE, CKAN, serta YouTube API, kemudian menyimpannya di **Bronze Layer**.
-2. **Pembersihan & Transformasi (Silver Layer)**: Memanfaatkan Apache Spark untuk standarisasi format, pembersihan data *Null/Duplicate*, dan agregasi awal.
-3. **Pemodelan Machine Learning (Anomaly Detection)**: Melatih model Isolation Forest pada data Silver untuk memberikan *Anomaly Score* pada setiap paket pengadaan.
-4. **Data Aggregation (Gold Layer)**: Menghasilkan tabel ringkasan (KPI) per kecamatan/SKPD untuk performa analitik tinggi di sisi *frontend*.
-5. **Visualisasi & Deployment**: Membangun backend FastAPI dan antarmuka web interaktif (Peta Spasial & Heatmap) untuk *monitoring* transparansi publik.
+Untuk mereproduksi *pipeline* secara manual (langkah demi langkah), Anda dapat menjalankan perintah berikut secara berurutan:
+
+### 1. Pengumpulan Data (Data Ingestion - Bronze Layer)
+Menggunakan skrip Python untuk meng-*generate* dataset sintetis APBD dan menarik data dari LPSE, CKAN, serta YouTube API, kemudian menyimpannya ke `data/bronze/`.
+```bash
+python -m src.ingestion.generate_apbd_synthetic
+python -m src.ingestion.ingest_lpse
+```
+
+### 2. Pembersihan & Transformasi (Silver Layer)
+Memanfaatkan Apache Spark untuk standarisasi format, pembersihan data *Null/Duplicate*, dan agregasi awal ke format Delta Lake di `data/silver/`.
+```bash
+python -m src.lakehouse.silver_transform
+```
+
+### 3. Pemodelan Machine Learning (Anomaly Detection)
+Melatih model *Isolation Forest* pada data Silver untuk mendeteksi penggelembungan dana dan memberikan *Anomaly Score*.
+```bash
+python -m src.ml_engine.anomaly_detector
+```
+
+### 4. Data Aggregation (Gold Layer)
+Menghasilkan tabel ringkasan (KPI) per kecamatan/SKPD untuk kebutuhan analitik tinggi di sisi *frontend* (`data/gold/`).
+```bash
+python -m src.lakehouse.gold_transform
+```
+
+### 5. Analisis Sentimen NLP (Opsional)
+Menggunakan NLP untuk mengekstrak opini polaritas (Positif/Negatif) dari komentar publik terkait proyek SKPD.
+```bash
+python -m src.ingestion.ingest_youtube_comments
+```
+
+### 6. Menjalankan Backend & Visualisasi (FastAPI + UI)
+Membangun backend FastAPI untuk merutekan *REST API* yang dikonsumsi oleh *Web Dashboard* interaktif (Peta Spasial & Heatmap).
+```bash
+python -m src.api.main
+```
 
 ---
 
