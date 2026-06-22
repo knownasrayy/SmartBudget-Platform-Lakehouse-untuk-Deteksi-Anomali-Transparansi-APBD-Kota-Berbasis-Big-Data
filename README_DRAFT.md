@@ -186,4 +186,32 @@ python -m src.api.main
 Akses Dashboard secara interaktif di browser Anda melalui: **http://localhost:8080**
 
 ---
+
+## Langkah Pengerjaan (Methodology)
+
+1. **Pengumpulan Data (Data Ingestion)**: Menggunakan Python untuk meng-*generate* dataset sintetis APBD dan menarik data dari LPSE, CKAN, serta YouTube API, kemudian menyimpannya di **Bronze Layer**.
+2. **Pembersihan & Transformasi (Silver Layer)**: Memanfaatkan Apache Spark untuk standarisasi format, pembersihan data *Null/Duplicate*, dan agregasi awal.
+3. **Pemodelan Machine Learning (Anomaly Detection)**: Melatih model Isolation Forest pada data Silver untuk memberikan *Anomaly Score* pada setiap paket pengadaan.
+4. **Data Aggregation (Gold Layer)**: Menghasilkan tabel ringkasan (KPI) per kecamatan/SKPD untuk performa analitik tinggi di sisi *frontend*.
+5. **Visualisasi & Deployment**: Membangun backend FastAPI dan antarmuka web interaktif (Peta Spasial & Heatmap) untuk *monitoring* transparansi publik.
+
+---
+
+## Tangkapan Layar (Screenshots)
+
+### 1. Dashboard Utama & KPI
+![Dashboard Utama](https://placehold.co/800x400?text=Screenshot+Dashboard+Utama)
+*Tampilan Ringkasan Eksekutif, Tren Waktu, dan Proporsi Risiko.*
+
+### 2. Peta Spasial Interaktif
+![Peta Spasial](https://placehold.co/800x400?text=Screenshot+Peta+Spasial)
+*Pemetaan Risiko Anomali APBD berbasis Geografis (Choropleth/Titik).*
+
+### 3. Analisis Sentimen (NLP)
+![Analisis Sentimen](https://placehold.co/800x400?text=Screenshot+Analisis+Sentimen)
+*Analisis Opini Publik terhadap Berita dan Media Sosial SKPD Terkait.*
+
+*(Ganti URL gambar di atas dengan tautan/path gambar aslimu saat mengunggah ke repositori GitHub)*
+
+---
 *Proyek ini diajukan untuk Kompetisi Gemastik / Tugas Akhir Big Data & Data Lakehouse.*
