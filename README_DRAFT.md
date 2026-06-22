@@ -19,7 +19,7 @@ Pengawasan Anggaran Pendapatan dan Belanja Daerah (APBD) secara manual sangat ti
 
 - Membangun pipeline data Big Data end-to-end menggunakan **PySpark** dan **Delta Lake** untuk memproses data dari skala mentah hingga siap saji (Arsitektur Medallion: Bronze, Silver, Gold).
 - Mengimplementasikan model Machine Learning (Isolation Forest / Ensemble) secara terdistribusi untuk mendeteksi transaksi anomali pada paket pengadaan APBD.
-- Membangun sistem *crawling* NLP untuk analisis sentimen berita (GNews/Twitter) guna memantau persepsi publik terhadap instansi/dinas.
+- Membangun sistem *crawling* NLP untuk analisis sentimen dari berita (API GNews) dan media sosial (API YouTube) guna memantau persepsi publik terhadap instansi/dinas.
 - Menyajikan seluruh wawasan, peta spasial, dan *heatmap* anomali dalam sebuah *dashboard* interaktif yang berkecepatan tinggi menggunakan **FastAPI** dan **Vanilla JS/Tailwind CSS**.
 
 ## Dataset
@@ -55,7 +55,7 @@ flowchart TD
     subgraph sources [Data Sources]
         A1[Data APBD Sintetis]:::source
         A2[Data LPSE & CKAN]:::source
-        A3[GNews & Twitter]:::source
+        A3[API GNews & YouTube]:::source
     end
 
     %% Ingestion
