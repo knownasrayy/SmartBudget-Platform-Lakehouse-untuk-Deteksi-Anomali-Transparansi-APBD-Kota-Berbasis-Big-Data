@@ -40,9 +40,60 @@ Pengawasan Anggaran Pendapatan dan Belanja Daerah (APBD) secara manual sangat ti
 
 ## Arsitektur Solusi (Medallion Data Lakehouse)
 
-![Architecture Diagram](https://placehold.co/800x400/png?text=Architecture+Diagram+Placeholder)
+```mermaid
+flowchart TD
+    %% Define styles
+    classDef source fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef bronze fill:#cd7f32,stroke:#333,stroke-width:2px,color:#fff;
+    classDef silver fill:#c0c0c0,stroke:#333,stroke-width:2px;
+    classDef gold fill:#ffd700,stroke:#333,stroke-width:2px;
+    classDef ml fill:#8a2be2,stroke:#333,stroke-width:2px,color:#fff;
+    classDef api fill:#4caf50,stroke:#333,stroke-width:2px,color:#fff;
+    classDef ui fill:#2196f3,stroke:#333,stroke-width:2px,color:#fff;
 
-Pendekatan **Medallion Architecture (Bronze, Silver, Gold)** sangat ideal untuk memvalidasi dan memproses data APBD secara bertahap. Arsitektur ini memastikan data mentah tersimpan dengan aman, dibersihkan dan diperkaya di layer Silver, serta diagregasi secara optimal di layer Gold untuk disajikan dengan latensi rendah kepada Dashboard.
+    %% Data Sources
+    subgraph Data Sources
+        A1[Data APBD Sintetis]:::source
+        A2[Data LPSE & CKAN]:::source
+        A3[GNews & Twitter]:::source
+    end
+
+    %% Ingestion
+    B[Ingestion Scripts]:::api
+    
+    A1 --> B
+    A2 --> B
+    A3 --> B
+
+    %% Medallion Architecture
+    subgraph Data Lakehouse (HDFS/Lokal)
+        C[(Bronze Layer\nRaw CSV/JSON)]:::bronze
+        D[(Silver Layer\nCleaned Delta/Parquet)]:::silver
+        E[(Gold Layer\nAggregated Data)]:::gold
+    end
+
+    B -->|Save Raw| C
+
+    %% Processing & ML
+    F[PySpark Data Cleaning]:::silver
+    G[Machine Learning\nAnomaly Scoring]:::ml
+    H[PySpark Aggregation]:::gold
+    
+    C --> F
+    F --> G
+    G -->|Save Scored Data| D
+    D --> H
+    H -->|Save Dashboard KPIs| E
+
+    %% Serving Layer
+    I[FastAPI Backend\nREST API]:::api
+    J[Web Dashboard\nInteractive UI & Peta]:::ui
+
+    E -->|Read Data| I
+    I -->|JSON API| J
+```
+
+Pendekatan **Medallion Architecture (Bronze, Silver, Gold)** sangat ideal untuk memvalidasi dan memproses data APBD secara bertahap. Arsitektur ini memastikan data mentah tersimpan dengan aman, dibersihkan dan diperkaya di layer Silver (di mana deteksi Machine Learning dijalankan), serta diagregasi secara optimal di layer Gold untuk disajikan dengan latensi yang sangat rendah kepada pengguna melalui Dashboard.
 
 ## Komponen
 
