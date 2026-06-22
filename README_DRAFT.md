@@ -52,7 +52,7 @@ flowchart TD
     classDef ui fill:#2196f3,stroke:#333,stroke-width:2px,color:#fff;
 
     %% Data Sources
-    subgraph Data Sources
+    subgraph sources [Data Sources]
         A1[Data APBD Sintetis]:::source
         A2[Data LPSE & CKAN]:::source
         A3[GNews & Twitter]:::source
@@ -66,7 +66,7 @@ flowchart TD
     A3 --> B
 
     %% Medallion Architecture
-    subgraph Data Lakehouse (HDFS/Lokal)
+    subgraph lakehouse [Data Lakehouse HDFS/Lokal]
         C[(Bronze Layer\nRaw CSV/JSON)]:::bronze
         D[(Silver Layer\nCleaned Delta/Parquet)]:::silver
         E[(Gold Layer\nAggregated Data)]:::gold
