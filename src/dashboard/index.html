@@ -228,7 +228,7 @@
 <th onclick="sortAnomalyTable('uraian_belanja')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Pos Belanja <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th onclick="sortAnomalyTable('jenis_pengadaan')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Kategori <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th onclick="sortAnomalyTable('realisasi')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-right cursor-pointer hover:text-primary select-none">Nominal <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
-<th onclick="sortAnomalyTable('zscore_per_rekening')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-center cursor-pointer hover:text-primary select-none">Z-Score <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
+<th onclick="sortAnomalyTable('zscore_per_rekening')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-center cursor-pointer hover:text-primary select-none">Skor Anomali <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th onclick="sortAnomalyTable('anomaly_score')" class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider cursor-pointer hover:text-primary select-none">Status <span class="material-symbols-outlined text-[14px] align-middle">unfold_more</span></th>
 <th class="px-6 py-4 font-label-lg text-label-lg text-on-surface-variant uppercase tracking-wider text-center">Aksi</th>
 </tr>
@@ -849,7 +849,7 @@
                   <span class="text-error font-label-sm text-label-sm flex items-center bg-white/50 px-2 py-1 rounded-full font-bold">Status Kritis</span>
               </div>
               <div class="mt-4">
-                  <p class="font-label-lg text-label-lg text-on-error-container/70">Skor Z-Score</p>
+                  <p class="font-label-lg text-label-lg text-on-error-container/70">Skor Anomali</p>
                   <h3 id="detail-zscore" class="font-headline-lg text-headline-lg text-on-error-container">-</h3>
               </div>
           </div>
@@ -1215,7 +1215,7 @@
 <span class="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center font-bold text-sm">S</span>
 <h4 class="font-title-md text-slate-800">Silver Layer</h4>
 </div>
-<p class="text-body-md text-slate-700">Data yang sudah dibersihkan, dinormalisasi, dan diperkaya dengan fitur turunan (rasio, z-score, log transform).</p>
+<p class="text-body-md text-slate-700">Data yang sudah dibersihkan, dinormalisasi, dan diperkaya dengan fitur turunan (rasio, skor anomali, log transform).</p>
 <div class="mt-3 text-label-sm text-slate-600">Proses: Pandas • Output: silver_apbd_belanja.csv</div>
 </div>
 <div class="p-5 bg-yellow-50 border-2 border-yellow-400 rounded-xl">

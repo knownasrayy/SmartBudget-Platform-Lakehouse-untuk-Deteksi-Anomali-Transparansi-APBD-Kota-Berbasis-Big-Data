@@ -119,12 +119,35 @@ function initLeafletMaps() {
 
 
     // ---- 3. PETA SPASIAL ----
-    if (!leafletMaps['peta'] && document.getElementById('peta-spasial-map')) {
-        const petaMap = L.map('peta-spasial-map', { zoomControl: true, attributionControl: true })
-            .setView(SURABAYA_CENTER, 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(petaMap);
+    window.renderPetaSpasial = function() {
+        const mapContainer = document.getElementById('peta-spasial-map');
+        if (!mapContainer) return;
         
-        KECAMATAN_ANOMALI.forEach(k => {
+        let petaMap = leafletMaps['peta'];
+        
+        // If Leaflet already initialized on this container but our reference was lost, clean it up
+        if (!petaMap && mapContainer._leaflet_id) {
+            mapContainer.innerHTML = '';
+            mapContainer._leaflet_id = null;
+            mapContainer.className = mapContainer.className.replace(/leaflet-.*? /g, '');
+        }
+
+        if (!petaMap) {
+            petaMap = L.map('peta-spasial-map', { zoomControl: true, attributionControl: true })
+                .setView(SURABAYA_CENTER, 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(petaMap);
+            leafletMaps['peta'] = petaMap;
+        }
+
+        // Clear existing markers
+        if (window.petaSpasialLayer) {
+            petaMap.removeLayer(window.petaSpasialLayer);
+        }
+        window.petaSpasialLayer = L.layerGroup().addTo(petaMap);
+
+        const dataToRender = window.SKPD_ANOMALI || KECAMATAN_ANOMALI;
+
+        dataToRender.forEach(k => {
             const color = k.skor >= 0.75 ? '#ef4444' : k.skor >= 0.5 ? '#f59e0b' : '#22c55e';
             const fillOpacity = 0.2 + k.skor * 0.5;
             L.circle([k.lat, k.lng], {
@@ -135,13 +158,24 @@ function initLeafletMaps() {
                 <div style="min-width:180px">
                 <b style="font-size:14px">${k.nama}</b><br>
                 <hr style="margin:6px 0">
-                <b>Skor Risiko:</b> ${(k.skor*100).toFixed(0)}%<br>
+                <b>Total Proyek Janggal:</b> ${k.jumlah_proyek || 1}<br>
+                <b>Total Pagu:</b> ${formatRupiah(k.total_pagu || 0)}<br>
+                <b>Skor Anomali Rata-rata:</b> ${(k.skor*100).toFixed(0)}%<br>
                 <b>Status:</b> <span style="color:${color};font-weight:bold">${k.skor >= 0.75 ? 'KRITIS' : k.skor >= 0.5 ? 'WASPADA' : 'AMAN'}</span>
                 </div>
-            `).addTo(petaMap);
+            `).addTo(window.petaSpasialLayer);
         });
-        leafletMaps['peta'] = petaMap;
-        setTimeout(() => petaMap.invalidateSize(), 100);
+        
+        // Force resize multiple times to catch all CSS transition ends
+        [100, 300, 600, 1000].forEach(delay => {
+            setTimeout(() => {
+                if (leafletMaps['peta']) leafletMaps['peta'].invalidateSize();
+            }, delay);
+        });
+    };
+
+    if (!leafletMaps['peta'] && document.getElementById('peta-spasial-map')) {
+        window.renderPetaSpasial();
     }
 }
 
@@ -155,25 +189,35 @@ function switchTab(tabId, element) {
         targetTab.style.display = 'block';
         
         // Fix Leaflet hidden canvas issue when tab becomes visible
-        if (tabId === 'heatmap_anomali' && leafletMaps['heatmap']) {
+        if (tabId === 'heatmap_anomali') {
+            if (leafletMaps['heatmap']) leafletMaps['heatmap'].invalidateSize();
             setTimeout(() => {
-                leafletMaps['heatmap'].invalidateSize();
-                if (!window.heatmapActiveLayer) {
-                    window.renderHeatmapLayer();
-                }
-            }, 100);
+                if (leafletMaps['heatmap']) leafletMaps['heatmap'].invalidateSize();
+                if (!window.heatmapActiveLayer && window.renderHeatmapLayer) window.renderHeatmapLayer();
+            }, 150);
+        } else if (tabId === 'peta_spasial') {
+            if (leafletMaps['peta']) {
+                leafletMaps['peta'].invalidateSize();
+                setTimeout(() => leafletMaps['peta'].invalidateSize(), 150);
+            } else if (window.renderPetaSpasial) {
+                window.renderPetaSpasial();
+            }
         }
     }
     document.querySelectorAll('.nav-item').forEach(el => {
         el.className = "nav-item flex items-center gap-3 px-3 py-2.5 text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all rounded-lg";
         const icon = el.querySelector('.icon-elem');
-        icon.classList.remove('sidebar-active');
-        icon.style = "";
+        if(icon) {
+            icon.classList.remove('sidebar-active');
+            icon.style = "";
+        }
     });
     element.className = "nav-item flex items-center gap-3 px-3 py-2.5 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg transition-all translate-x-1";
     const icon = element.querySelector('.icon-elem');
-    icon.classList.add('sidebar-active');
-    icon.style = "font-variation-settings: 'FILL' 1;";
+    if(icon) {
+        icon.classList.add('sidebar-active');
+        icon.style = "font-variation-settings: 'FILL' 1;";
+    }
 
     // Lazy-init Leaflet maps on tab switch (maps need visible container to render)
     setTimeout(initLeafletMaps, 150);
@@ -909,13 +953,42 @@ function initDashboard() {
 
             let qData = { Q1: {a:0, r:0}, Q2: {a:0, r:0}, Q3: {a:0, r:0}, Q4: {a:0, r:0} };
 
+            let skpdMap = {};
+            // Generate deterministic pseudo-random coordinates within Surabaya
+            const getPseudoCoords = (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const lat = -7.2 + (Math.abs(hash) % 150) / 1000; // -7.200 to -7.350
+                const lng = 112.65 + (Math.abs(hash * 3) % 150) / 1000; // 112.650 to 112.800
+                return {lat, lng};
+            };
+
             data.forEach(row => {
                 let isFlagged = String(row.is_flagged || '').trim().toLowerCase();
-                if(isFlagged === 'true' || isFlagged === '1' || row.anomaly_label === 'Anomaly' || row.anomaly_label === 'Anomali') {
+                let isAnomali = (isFlagged === 'true' || isFlagged === '1' || row.anomaly_label === 'Anomaly' || row.anomaly_label === 'Anomali' || parseFloat(row.anomaly_score) > 0.6);
+                
+                if(isAnomali) {
                     anomalies.push(row);
                     let kec = row.nama_skpd || 'Tidak Diketahui';
                     if (!wilayahAnomalies[kec]) wilayahAnomalies[kec] = 0;
                     wilayahAnomalies[kec] += parseFloat(row.realisasi || 0);
+
+                    if (!skpdMap[kec]) {
+                        const coords = getPseudoCoords(kec);
+                        skpdMap[kec] = {
+                            nama: kec,
+                            lat: coords.lat,
+                            lng: coords.lng,
+                            skor_total: 0,
+                            jumlah_proyek: 0,
+                            total_pagu: 0
+                        };
+                    }
+                    skpdMap[kec].skor_total += parseFloat(row.anomaly_score || 0);
+                    skpdMap[kec].jumlah_proyek += 1;
+                    skpdMap[kec].total_pagu += parseFloat(row.pagu_anggaran || row.anggaran || 0);
                 }
 
                 // Time Series Aggregation - use bulan_kontrak if available
@@ -980,6 +1053,17 @@ function initDashboard() {
             window.originalTableAnomalies.sort((a, b) => parseFloat(b.ensemble_score || b.anomaly_score || 0) - parseFloat(a.ensemble_score || a.anomaly_score || 0));
             window.currentAnomalyPage = 1;
             window.renderAnomalyTable();
+
+            // Transform skpdMap to array for Peta Spasial
+            window.SKPD_ANOMALI = Object.values(skpdMap).map(s => {
+                s.skor = Math.min((s.skor_total / s.jumlah_proyek) * 1.5, 1.0); // Normalize score for UI
+                return s;
+            });
+            
+            // Re-render map if already active
+            if (window.renderPetaSpasial) {
+                window.renderPetaSpasial();
+            }
 
             // --- TABEL DETAIL ANOMALI (SEMUA) ---
             const tbodyDetail = document.getElementById('tabel-detail-anomali-body');
