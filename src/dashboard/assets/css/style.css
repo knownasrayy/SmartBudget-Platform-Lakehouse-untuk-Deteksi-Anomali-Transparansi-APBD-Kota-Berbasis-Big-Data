@@ -155,3 +155,64 @@
     border: 1px solid #e2e2e2;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
+
+/* ===================================
+   Dark Mode Overrides (Global Patch)
+   =================================== */
+.dark .bg-background { background-color: #1a1c1c !important; }
+.dark .bg-surface { background-color: #1a1c1c !important; }
+.dark .bg-surface-container-lowest { background-color: #2f3131 !important; }
+.dark .bg-surface-container-low { background-color: #303030 !important; }
+.dark .bg-surface-container { background-color: #1b1b1b !important; }
+.dark .bg-surface-container-high { background-color: #454652 !important; }
+.dark .bg-surface-container-highest { background-color: #474747 !important; }
+
+.dark .text-on-surface { color: #f9f9f9 !important; }
+.dark .text-on-background { color: #f9f9f9 !important; }
+.dark .text-on-surface-variant { color: #c8c6c6 !important; }
+
+.dark .border-outline-variant { border-color: #767683 !important; }
+.dark .border-outline { border-color: #999897 !important; }
+
+.dark .glass-card {
+    background: rgba(47, 49, 49, 0.75) !important;
+    border-color: rgba(118, 118, 131, 0.4) !important;
+}
+
+.dark .network-canvas-bg {
+    background-color: #1a1c1c !important;
+    background-image: radial-gradient(#454652 1px, transparent 1px) !important;
+}
+
+.dark .node-icon {
+    background: #2f3131 !important;
+    border-color: #767683 !important;
+    color: #f9f9f9 !important;
+}
+
+.dark .node-label {
+    background: rgba(47, 49, 49, 0.92) !important;
+    color: #f9f9f9 !important;
+    border-color: #454652 !important;
+}
+
+.dark .sentiment-neutral {
+    background-color: #454652 !important;
+    color: #f9f9f9 !important;
+}
+
+/* Typography & Accent Colors */
+.dark .text-primary { color: #bdc2ff !important; }
+.dark .bg-primary-fixed { background-color: #1a237e !important; }
+.dark .text-secondary { color: #a5c8ff !important; }
+
+/* Error Colors */
+.dark .bg-error-container { background-color: #93000a !important; border-color: #ba1a1a !important; }
+.dark .text-error { color: #ffdad6 !important; }
+.dark .bg-error { background-color: #ffdad6 !important; color: #93000a !important; }
+.dark .text-on-error { color: #93000a !important; }
+.dark .text-on-error-container { color: #ffdad6 !important; }
+.dark .text-on-error-container\/70 { color: rgba(255, 218, 214, 0.7) !important; }
+
+/* Panels & Bright Surfaces */
+.dark .bg-surface-bright { background-color: #2f3131 !important; }

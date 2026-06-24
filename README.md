@@ -1,128 +1,383 @@
-# 🏛️ SmartBudget Lakehouse: Platform Deteksi Anomali & Transparansi APBD Berbasis Big Data
+<div align="center">
 
-![Status](https://img.shields.io/badge/Status-Production_Ready-brightgreen)
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![Big Data](https://img.shields.io/badge/Big_Data-Apache_Spark-orange)
-![Orchestration](https://img.shields.io/badge/Orchestration-Apache_Airflow-red)
-![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
+# 💰 SmartBudget
 
-**SmartBudget Lakehouse** adalah platform *Big Data* berskala *Enterprise* yang dirancang untuk memantau, mendeteksi anomali (indikasi *fraud* atau *markup*), dan mensinkronkan transparansi Anggaran Pendapatan dan Belanja Daerah (APBD) Kota Surabaya dengan sentimen publik. 
+### Platform Lakehouse untuk Deteksi Anomali & Transparansi APBD Kota
 
-Proyek ini mendemonstrasikan implementasi **Medallion Data Lakehouse Architecture** murni menggunakan ekosistem *Big Data* sesungguhnya (*Apache Spark*, *Delta Lake*, *Apache Airflow*) yang dikombinasikan dengan *Machine Learning* dan *Natural Language Processing* (NLP).
+<br/>
 
----
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Apache_Spark-3.5-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
+![Delta Lake](https://img.shields.io/badge/Delta_Lake-3.2-003366?style=for-the-badge&logo=delta&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Scikit Learn](https://img.shields.io/badge/Scikit--Learn-1.3-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![License](https://img.shields.io/badge/License-Academic-A855F7?style=for-the-badge)
 
-## ✨ Fitur Utama & Inovasi Solusi
+<br/>
 
-*   **📊 Arsitektur Medallion Lakehouse (PySpark & Delta Lake)**: Pengelolaan data multi-zona (*Bronze*, *Silver*, *Gold*) menggunakan *engine* terdistribusi **PySpark**. Data disimpan dalam format **Delta Lake** untuk menjamin integritas data (ACID *transactions*) dan performa *query* tingkat tinggi.
-*   **🔍 Deteksi Anomali Anggaran (Spark MLlib)**: Menggunakan algoritma **K-Means Clustering** dari *Spark MLlib* untuk mencari deviasi jarak (Euclidean) dan *Z-Score*, mengidentifikasi pengadaan barang/jasa yang secara statistik sangat mencurigakan secara otomatis.
-*   **⚙️ Otomatisasi Pipeline (Apache Airflow)**: Seluruh alur data (*Ingestion -> Silver Transform -> MLlib Scoring -> Gold Publish*) diorkestrasi secara otomatis (DAGs) dan terjadwal menggunakan **Apache Airflow**.
-*   **🌐 Multi-Source Data Ingestion**: Menarik data dunia nyata yang berukuran masif secara *real-time*:
-    *   **Data Terstruktur**: Portal Open Data Pemkot Surabaya (CKAN API).
-    *   **Data Tak Terstruktur (Teks)**: *Scraping* opini publik dan aduan warga menggunakan **Apify** (Twitter/X), **YouTube API** (Komentar), dan **Google News**.
-*   **🗣️ Analisis Sentimen Publik (NLP)**: Mengklasifikasikan opini masyarakat secara proaktif untuk membandingkan tingkat kepuasan warga dengan jumlah realisasi anggaran di suatu dinas.
-*   **🗺️ Visualisasi & Forensik Interaktif**: UI/UX memukau dibangun di atas **FastAPI** (Backend) dan Vanilla JavaScript + Tailwind CSS + Leaflet.js (Frontend) untuk pemetaan spasial anomali (*Heatmap*) dan pelacakan jejaring entitas/vendor.
+**Sistem Big Data end-to-end yang mengintegrasikan Data Lakehouse, Machine Learning,**
+**dan NLP untuk mendeteksi anomali belanja APBD serta mendorong transparansi fiskal kota.**
 
----
+<br/>
 
-## 🏗️ Desain Infrastruktur & Arsitektur Sistem
+[Tentang Proyek](#-tentang-proyek) · [Fitur Utama](#-fitur-utama) · [Arsitektur](#-arsitektur-solusi) · [Instalasi](#-instalasi--quick-start) · [Dokumentasi](#-metodologi--reproduksi)
 
-Sistem ini mematuhi standar arsitektur **Medallion**:
-
-1.  **🥉 Bronze Layer (Ingestion)**:
-    *   **Tujuan**: Menyimpan data mentah murni hasil ekstraksi dari API (JSON/CSV) tanpa modifikasi.
-    *   **Teknologi**: Python `requests`, `apify-client`, `google-api-python-client`.
-2.  **🥈 Silver Layer (Cleansing & Conforming)**:
-    *   **Tujuan**: Pembersihan tipe data, penanganan *Null*, dedah (*parsing*) tanggal, dan standardisasi skema.
-    *   **Teknologi**: **PySpark DataFrame API** menyimpan output dalam format direktori **Delta Lake**.
-3.  **🥇 Gold Layer (Analytics & ML)**:
-    *   **Tujuan**: Tabel agregasi akhir untuk dasbor (seperti ringkasan SKPD) dan penilaian Anomali (*Scored Data*).
-    *   **Teknologi**: **Spark MLlib** (VectorAssembler, StandardScaler, KMeans) mengekspor data ke dalam Delta Lake & CSV yang siap di-*serve*.
-4.  **🚀 Serving Layer**:
-    *   **Teknologi**: **FastAPI** (`src/api/main.py`) membaca *Gold Layer* dan mengeksposnya sebagai *endpoint* REST API berkecepatan tinggi (`/api/anomalies`, `/api/summary`) untuk dikonsumsi oleh *Frontend Dashboard*.
+</div>
 
 ---
 
-## 📂 Struktur Direktori
+## 👥 Tim Pengembang
+
+| No | Nama Lengkap | NRP |
+|:--:|:-------------|:----|
+| 1  | [Nama Anggota 1] | [NRP 1] |
+| 2  | [Nama Anggota 2] | [NRP 2] |
+| 3  | [Nama Anggota 3] | [NRP 3] |
+| 4  | [Nama Anggota 4] | [NRP 4] |
+
+> 📚 **Final Project — Big Data & Data Lakehouse**
+
+---
+
+## 📖 Tentang Proyek
+
+### Masalah
+
+Pengawasan Anggaran Pendapatan dan Belanja Daerah (APBD) secara manual sangat **tidak efisien** dan **rentan terhadap kecurangan** (*fraud*). Dengan volume transaksi pengadaan yang mencapai **jutaan baris per tahun**, pendekatan konvensional gagal mendeteksi pola anomali seperti penggelembungan dana, ketidakwajaran realisasi, atau monopoli vendor secara tepat waktu.
+
+### Solusi
+
+**SmartBudget** adalah platform *End-to-End Data Lakehouse* berbasis Big Data yang dirancang untuk:
+
+1. **Menelan (*ingest*)** data pengadaan APBD secara masif dari berbagai sumber — data transaksional (LPSE/CKAN), berita publik (GNews API), dan media sosial (YouTube API).
+2. **Memproses & mendeteksi** anomali pengeluaran menggunakan arsitektur **Medallion (Bronze → Silver → Gold)** yang dipadukan dengan model Machine Learning (*Isolation Forest*).
+3. **Memvisualisasikan** seluruh wawasan melalui dashboard interaktif berkinerja tinggi — lengkap dengan peta spasial, heatmap anomali, jejaring entitas, dan analisis sentimen publik — demi mendorong **transparansi fiskal** bagi pemerintah kota dan masyarakat.
+
+---
+
+## 🚀 Fitur Utama
+
+| Fitur | Deskripsi |
+|:------|:----------|
+| 🏗️ **Pipeline End-to-End** | Alur data otomatis dari *ingestion* mentah hingga visualisasi siap pakai, dibangun di atas PySpark dan Delta Lake |
+| 🧠 **Deteksi Anomali ML** | Model *Isolation Forest* & Z-Score yang berjalan terdistribusi untuk mendeteksi transaksi janggal pada paket pengadaan |
+| 📰 **Analisis Sentimen NLP** | Sistem *crawling* cerdas yang mengekstrak opini publik dari berita (GNews) dan komentar YouTube terkait SKPD |
+| 🗺️ **Peta Spasial Interaktif** | Visualisasi *choropleth* berbasis Leaflet.js untuk memetakan risiko anomali per kecamatan |
+| 🔥 **Heatmap Anomali** | Pemetaan intensitas anomali untuk identifikasi cepat wilayah-wilayah bermasalah |
+| 🕸️ **Jejaring Entitas** | Grafik relasi vendor–dinas–proyek untuk mengungkap potensi konflik kepentingan dan monopoli tender |
+| ⚡ **Dashboard Real-time** | Antarmuka web responsif dengan Night Mode, ditenagai oleh FastAPI backend dan Vanilla JS/Tailwind CSS |
+
+---
+
+## 🏛️ Arsitektur Solusi
+
+### Medallion Data Lakehouse
+
+SmartBudget mengadopsi **Medallion Architecture** — sebuah pola desain *data lakehouse* berlapis yang memisahkan data berdasarkan tingkat kematangannya:
+
+| Layer | Fungsi | Format |
+|:------|:-------|:-------|
+| 🥉 **Bronze** | Penyimpanan data mentah apa adanya (*raw ingestion*) | CSV, JSON |
+| 🥈 **Silver** | Data yang telah dibersihkan, dinormalisasi, dan diberi skor anomali oleh ML | Delta Lake, Parquet |
+| 🥇 **Gold** | Agregasi final berupa KPI, statistik, dan metrik siap konsumsi oleh dashboard | Delta Lake |
+
+Pendekatan berlapis ini memastikan **data mentah selalu tersimpan aman** (*immutable*), proses pembersihan dan deteksi ML dilakukan secara terisolasi di lapisan Silver, sementara lapisan Gold menyajikan data yang telah dioptimasi untuk *query* berkecepatan tinggi ke frontend.
+
+```mermaid
+flowchart TD
+    %% Define styles with dark-mode safe colors
+    classDef source fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#fff;
+    classDef bronze fill:#cd7f32,stroke:#8a5a22,stroke-width:2px,color:#fff;
+    classDef silver fill:#7f8c8d,stroke:#bdc3c7,stroke-width:2px,color:#fff;
+    classDef gold fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#fff;
+    classDef ml fill:#8e44ad,stroke:#9b59b6,stroke-width:2px,color:#fff;
+    classDef api fill:#27ae60,stroke:#2ecc71,stroke-width:2px,color:#fff;
+    classDef ui fill:#2980b9,stroke:#3498db,stroke-width:2px,color:#fff;
+
+    %% Data Sources
+    subgraph sources [Data Sources]
+        A1[Data APBD Sintetis]:::source
+        A2[Data LPSE & CKAN]:::source
+        A3[API GNews & YouTube]:::source
+    end
+
+    %% Ingestion
+    B[Ingestion Scripts]:::api
+    
+    A1 --> B
+    A2 --> B
+    A3 --> B
+
+    %% Medallion Architecture
+    subgraph lakehouse [Data Lakehouse HDFS/Lokal]
+        C[(Bronze Layer\nRaw CSV/JSON)]:::bronze
+        D[(Silver Layer\nCleaned Delta/Parquet)]:::silver
+        E[(Gold Layer\nAggregated Data)]:::gold
+    end
+
+    B -->|Save Raw| C
+
+    %% Processing & ML
+    F[PySpark Data Cleaning]:::silver
+    G[Machine Learning\nAnomaly Scoring]:::ml
+    H[PySpark Aggregation]:::gold
+    
+    C --> F
+    F --> G
+    G -->|Save Scored Data| D
+    D --> H
+    H -->|Save Dashboard KPIs| E
+
+    %% Serving Layer
+    I[FastAPI Backend\nREST API]:::api
+    J[Web Dashboard\nInteractive UI & Peta]:::ui
+
+    E -->|Read Data| I
+    I -->|JSON API| J
+```
+
+---
+
+## 🛠️ Tech Stack
+
+<table>
+<tr>
+<td align="center" width="180"><b>Kategori</b></td>
+<td><b>Teknologi</b></td>
+</tr>
+<tr>
+<td align="center">⚙️ <b>Big Data Engine</b></td>
+<td>Apache Spark, PySpark</td>
+</tr>
+<tr>
+<td align="center">💾 <b>Data Lake Storage</b></td>
+<td>Delta Lake, Parquet, CSV</td>
+</tr>
+<tr>
+<td align="center">🔌 <b>Backend & API</b></td>
+<td>FastAPI, Uvicorn, Python 3.12</td>
+</tr>
+<tr>
+<td align="center">🧠 <b>Machine Learning</b></td>
+<td>Scikit-Learn (Isolation Forest), Spark MLlib</td>
+</tr>
+<tr>
+<td align="center">📰 <b>Web Scraping / NLP</b></td>
+<td>BeautifulSoup, NLTK, TextBlob</td>
+</tr>
+<tr>
+<td align="center">🖥️ <b>Dashboard</b></td>
+<td>HTML5, Vanilla JavaScript, Tailwind CSS, Leaflet.js, Chart.js, Vis.js</td>
+</tr>
+</table>
+
+---
+
+## 📂 Struktur Proyek
 
 ```text
-├── dags/                # Apache Airflow DAGs (smartbudget_pipeline.py)
-├── data/
-│   ├── bronze/          # Data mentah ekstraksi API & Scraper
-│   ├── silver/          # Delta Lake format (Data Bersih)
-│   └── gold/            # Delta Lake & CSV (Data Agregat & Prediksi ML)
-├── src/
-│   ├── api/             # FastAPI Backend Server (main.py)
-│   ├── dashboard/       # Frontend UI (HTML, Tailwind CSS, JS, Leaflet)
-│   ├── ingestion/       # Script penarik data (CKAN, Apify, GNews, YouTube)
-│   ├── lakehouse/       # Transformasi Silver & Gold (PySpark)
-│   └── ml_engine/       # Algoritma Spark MLlib K-Means (anomaly_detector.py)
-├── requirements.txt     # Dependensi Python
-├── run_pyspark.ps1      # Wrapper eksekusi PySpark untuk environment Windows
-├── run_server.py        # Script untuk menjalankan FastAPI (Port 8080)
-└── README.md            # Dokumentasi
+SmartBudget-Lakehouse/
+│
+├── 📁 data/
+│   ├── bronze/              # Data mentah awal (Raw Ingestion)
+│   ├── silver/              # Data bersih & skor anomali ML (Cleaned)
+│   └── gold/                # Data teragregasi untuk Dashboard (Aggregated)
+│
+├── 📁 src/
+│   ├── api/                 # Backend FastAPI (main.py, routes)
+│   ├── dashboard/           # UI Dashboard (HTML, JS, CSS)
+│   ├── ingestion/           # Skrip penarikan data (Generators & Crawlers)
+│   ├── lakehouse/           # Pipeline Medallion (Transformasi PySpark)
+│   ├── ml_engine/           # Logika Machine Learning & Model
+│   └── nlp_engine/          # Analisis Sentimen Teks
+│
+├── 📁 hadoop/               # Dependensi lokal Spark untuk Windows
+├── 📄 requirements.txt      # Daftar pustaka Python
+├── 📄 run_ingestion.sh      # Script eksekusi otomatis Data Pipeline
+└── 📄 README.md             # Dokumentasi utama (file ini)
 ```
 
 ---
 
-## 🚀 Cara Instalasi dan Penggunaan
+## 📋 Prasyarat (*Prerequisites*)
 
-### 1. Prasyarat Sistem
-*   **Python 3.9+** terinstal.
-*   **Java (JDK 8/11)** terinstal dan *Environment Variable* `JAVA_HOME` telah dikonfigurasi (wajib untuk Apache Spark).
-*   *Hadoop winutils* (jika menggunakan Windows, agar PySpark dapat menulis *filesystem* dengan lancar).
+Pastikan perangkat lunak berikut telah terpasang di sistem Anda sebelum melanjutkan instalasi:
 
-### 2. Kloning Repositori & Virtual Environment
+| Perangkat Lunak | Versi Minimum | Keterangan |
+|:----------------|:--------------|:-----------|
+| **Python** | 3.10+ | Bahasa pemrograman utama |
+| **Java JDK** | 8 atau 11 | Diperlukan oleh Apache Spark / PySpark |
+| **Git** | 2.x | Untuk *cloning* repositori |
+| **pip** | 23+ | Python package manager |
+
+> ⚠️ **Catatan Windows**: Proyek ini menyertakan `hadoop/` yang berisi `winutils.exe` untuk menjalankan PySpark di lingkungan Windows tanpa instalasi Hadoop penuh.
+
+---
+
+## ⚡ Instalasi & Quick Start
+
+### 1️⃣ Clone & Install Dependencies
+
 ```bash
-git clone https://github.com/knownasrayy/Big-Data-Data-Lakehouse.git
-cd Big-Data-Data-Lakehouse
+# Clone repositori
+git clone https://github.com/username/SmartBudget-Lakehouse.git
+cd SmartBudget-Lakehouse
 
-# Konfigurasi Virtual Environment
+# Buat virtual environment (disarankan)
 python -m venv .venv
-.venv\Scripts\activate   # (Windows)
-# atau: source .venv/bin/activate (Linux/Mac)
-```
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS/Linux
 
-### 3. Instalasi Dependensi Terkait
-```bash
+# Install seluruh dependensi
 pip install -r requirements.txt
 ```
 
-### 4. Konfigurasi Kredensial (Opsional untuk Ingestion)
-Buat file `.env` di direktori *root* untuk menjalankan proses tarik data aktual dari internet:
-```env
-YOUTUBE_API_KEY=your_api_key_here
-GNEWS_API_KEY=your_api_key_here
-APIFY_TOKEN=your_apify_token_here
-```
+### 2️⃣ Konfigurasi Hadoop (Khusus Windows)
 
-### 5. Menjalankan Pipa Data (PySpark Lakehouse)
-Jika Anda menggunakan OS Windows, eksekusi menggunakan *wrapper* PowerShell yang sudah disediakan untuk menghindari *error gateway* Java:
+Atur *Environment Variable* agar PySpark dapat berjalan di Windows:
+
 ```powershell
-# 1. Tarik data (Simulasi/API)
-python src/ingestion/ingest_ckan_apbd.py
-python src/ingestion/ingest_apify_twitter.py
-
-# 2. Proses Medallion (Silver -> Gold -> MLlib)
-.\run_pyspark.ps1 src\lakehouse\silver_transform.py
-.\run_pyspark.ps1 src\ml_engine\anomaly_detector.py
+$env:HADOOP_HOME = "$PWD\hadoop"
+$env:PATH += ";$PWD\hadoop\bin"
 ```
-*(Catatan: Anda juga bisa mengotomatisasi ini jika menjalankan **Apache Airflow**).*
 
-### 6. Menjalankan Dashboard (FastAPI Backend)
-Jalankan server aplikasi utama untuk mengakses *Dashboard* Interaktif:
+### 3️⃣ Jalankan Data Pipeline & Machine Learning
+
+Eksekusi *bash script* berikut untuk memicu seluruh proses — mulai dari ingestion, pemrosesan Medallion, hingga scoring anomali ML — secara otomatis:
+
 ```bash
-python run_server.py
+./run_ingestion.sh
 ```
-Akses *dashboard* di *browser* pada tautan: **http://localhost:8080**
+
+### 4️⃣ Jalankan Web Dashboard & API
+
+Setelah data Gold Layer tersedia, aktifkan server backend:
+
+```bash
+python -m src.api.main
+```
+
+Buka browser dan akses dashboard di:
+
+> 🌐 **http://localhost:8080**
 
 ---
 
-## 🏆 Standar Kompetisi & Penilaian (Gemastik)
-Proyek ini dikembangkan dengan kerangka standar industri yang sangat relevan untuk dikompetisikan dalam ajang nasional seperti **GEMASTIK** pada kategori *Kota Cerdas (Smart City)* atau *Penambangan Data (Data Mining)*:
-*   Mendemonstrasikan penerapan nyata **Big Data** dan mengatasi *silo data* (gabungan data struktur pemda & teks media sosial).
-*   Menerapkan arsitektur skalabel (*Separation of Compute and Storage*).
-*   Berfokus pada penyelesaian masalah sosial-ekonomi ber-dampak tinggi (pemberantasan korupsi dan optimalisasi anggaran).
+## 📘 Metodologi & Reproduksi
+
+Untuk mereproduksi pipeline secara **manual** (langkah demi langkah), jalankan perintah berikut secara berurutan:
+
+### Tahap 1 — Pengumpulan Data *(Bronze Layer)*
+
+Menghasilkan dataset sintetis APBD dan menarik data dari LPSE, CKAN, serta YouTube API ke `data/bronze/`.
+
+```bash
+python -m src.ingestion.generate_apbd_synthetic
+python -m src.ingestion.ingest_lpse
+```
+
+### Tahap 2 — Pembersihan & Transformasi *(Silver Layer)*
+
+PySpark melakukan standarisasi format, pembersihan data *Null/Duplicate*, dan normalisasi ke format Delta Lake di `data/silver/`.
+
+```bash
+python -m src.lakehouse.silver_transform
+```
+
+### Tahap 3 — Pemodelan Machine Learning *(Anomaly Detection)*
+
+Melatih model *Isolation Forest* pada data Silver untuk mendeteksi penggelembungan dana dan memberikan *Anomaly Score* per transaksi.
+
+```bash
+python -m src.ml_engine.anomaly_detector
+```
+
+### Tahap 4 — Agregasi Data *(Gold Layer)*
+
+Menghasilkan tabel ringkasan KPI per kecamatan/SKPD untuk kebutuhan analitik di sisi frontend (`data/gold/`).
+
+```bash
+python -m src.lakehouse.gold_transform
+```
+
+### Tahap 5 — Analisis Sentimen NLP *(Opsional)*
+
+Mengekstrak opini polaritas (Positif/Negatif) dari komentar publik terkait proyek SKPD.
+
+```bash
+python -m src.ingestion.ingest_youtube_comments
+```
+
+### Tahap 6 — Backend & Visualisasi *(FastAPI + Dashboard)*
+
+Mengaktifkan server FastAPI yang merutekan REST API (`/api/anomalies`, `/api/summary`) dan menyajikan Web Dashboard interaktif.
+
+```bash
+python -m src.api.main
+```
 
 ---
-*Dibuat untuk merevolusi transparansi pemerintahan berbasis Big Data dan Kecerdasan Buatan.*
+
+## 📊 Dataset
+
+| Atribut | Detail |
+|:--------|:-------|
+| **Nama** | Synthetic APBD Surabaya & LPSE Data (Data Simulasi Berbasis Pola Asli) |
+| **Skala** | Jutaan baris (Big Data Simulation) |
+| **Format** | CSV / JSON (Terstruktur) |
+| **Usability Score** | 10.0 |
+
+**Mengapa dataset ini dipilih?**
+
+- **🔢 Skala Enterprise** — Ukurannya yang masif dirancang khusus untuk mendemonstrasikan kapabilitas komputasi paralel Apache Spark dan format Delta Lake.
+- **🔍 Studi Kasus Fraud Detection** — Mendeteksi anomali (penggelembungan dana, ketidakwajaran realisasi) merupakan permasalahan nyata yang krusial di sektor pemerintahan.
+- **🔗 Multi-Source Integration** — Menggabungkan data transaksional terstruktur (APBD/LPSE) dengan data tidak terstruktur (teks sentimen berita) menjadikan pipeline ini komprehensif dan representatif.
+
+---
+
+## 📸 Tangkapan Layar
+
+### Dashboard Utama & KPI
+
+<div align="center">
+
+![Dashboard Utama](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Dashboard+Utama)
+
+*Tampilan ringkasan eksekutif, tren waktu realisasi, dan proporsi risiko anggaran.*
+
+</div>
+
+### Peta Spasial Interaktif
+
+<div align="center">
+
+![Peta Spasial](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Peta+Spasial)
+
+*Pemetaan risiko anomali APBD berbasis geografis (Choropleth) per kecamatan.*
+
+</div>
+
+### Analisis Sentimen (NLP)
+
+<div align="center">
+
+![Analisis Sentimen](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Analisis+Sentimen)
+
+*Analisis opini publik terhadap berita dan media sosial terkait SKPD.*
+
+</div>
+
+> 💡 *Ganti URL placeholder di atas dengan path gambar asli saat mengunggah ke repositori GitHub.*
+
+---
+
+<div align="center">
+
+**📚 Proyek ini diajukan sebagai Final Project mata kuliah Big Data & Data Lakehouse.**
+
+<br/>
+
+*Dibangun dengan ❤️ menggunakan PySpark, Delta Lake, dan FastAPI*
+
+</div>

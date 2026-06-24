@@ -211,7 +211,7 @@ python -m src.ml_engine.anomaly_detector
 ```
 
 ### 4. Data Aggregation (Gold Layer)
-Menghasilkan tabel ringkasan (KPI) per kecamatan/SKPD untuk kebutuhan analitik tinggi di sisi *frontend* (`data/gold/`).
+Menghasilkan tabel ringkasan (KPI) per kecamatan/SKPD unftuk kebutuhan analitik tinggi di sisi *frontend* (`data/gold/`).
 ```bash
 python -m src.lakehouse.gold_transform
 ```
