@@ -29,12 +29,78 @@
 
 ## 👥 Tim Pengembang
 
-| No | Nama Lengkap | NRP |
-|:--:|:-------------|:----|
-| 1  | [Nama Anggota 1] | [NRP 1] |
-| 2  | [Nama Anggota 2] | [NRP 2] |
-| 3  | [Nama Anggota 3] | [NRP 3] |
-| 4  | [Nama Anggota 4] | [NRP 4] |
+<div align="center">
+
+| No | Nama | NRP | Role |
+|:--:|:-----|:----|:-----|
+| 1 | Rayhan Agnan Kusuma | 5027241102 | ☁️ Cloud Architect & Dashboard Designer |
+| 2 | Az Zahra Tasya Adelia | 5027241087 | 🔄 Data Ingestion & Streaming Engineer |
+| 3 | Dimas Satya Andhika | 5027241032 | 🏗️ Lakehouse & Spark Engineer |
+| 4 | Raya Ahmad Syarif | 5027241041 | 🕵️ Machine Learning & Graph Engineer |
+| 5 | Tasya Aulia Darmawan | 5027241009 | 🧠 NLP Data Scientist |
+
+</div>
+
+<br/>
+
+### 🛠️ Detail Peran
+
+<details>
+<summary><b>☁️ Rayhan Agnan Kusuma — Cloud Architect & Dashboard Designer</b></summary>
+
+> Fokus pada infrastruktur cloud dan hasil akhir (end-user experience).
+
+**Tanggung Jawab:** Melakukan deployment klaster pendukung, mengatur konektivitas antar-layanan, dan membangun dasbor SmartBudget yang interaktif.
+
+**Tech Stack:** `AWS / GCP` · `Docker / Kubernetes` · `Apache Superset / Grafana` · `UI/UX Design`
+
+</details>
+
+<details>
+<summary><b>🔄 Az Zahra Tasya Adelia — Data Ingestion & Streaming Engineer</b></summary>
+
+> Berperan sebagai garda terdepan untuk menyedot (scrape) dan mengalirkan data mentah.
+
+**Tanggung Jawab:** Membuat skrip scraper untuk mengambil data anggaran dari portal SIPD/daerah, mengunduh PDF laporan BPK, dan menarik data Twitter/berita via API. Memastikan aliran data tidak terputus.
+
+**Tech Stack:** `Python (Scrapy, Selenium, BeautifulSoup)` · `REST API` · `Apache Kafka` · `Apache Airflow`
+
+</details>
+
+<details>
+<summary><b>🏗️ Dimas Satya Andhika — Lakehouse & Spark Engineer</b></summary>
+
+> Bertanggung jawab atas jantung pemrosesan data (Arsitektur Medallion) agar komputasinya efisien.
+
+**Tanggung Jawab:** Merancang skema tabel Bronze (mentah), Silver (dibersihkan), dan Gold (agregat siap analitik). Melakukan join antara data tabel SIPD dengan data sentimen publik secara terdistribusi.
+
+**Tech Stack:** `Apache Spark (PySpark / Scala)` · `Delta Lake / Apache Iceberg` · `SQL`
+
+</details>
+
+<details>
+<summary><b>🕵️ Raya Ahmad Syarif — Machine Learning & Graph Engineer</b></summary>
+
+> Bertugas menjadi "detektif angka" untuk menemukan anomali anggaran dan aliran dana.
+
+**Tanggung Jawab:** Menerapkan algoritma deteksi anomali pada nilai-nilai pos belanja APBD dan membangun model graf untuk mendeteksi hubungan mencurigakan antar entitas (misal: vendor dengan alamat yang sama).
+
+**Tech Stack:** `Scikit-Learn (Isolation Forest, Benford's Law)` · `Neo4j (Graph Database)` · `Pandas`
+
+</details>
+
+<details>
+<summary><b>🧠 Tasya Aulia Darmawan — NLP Data Scientist</b></summary>
+
+> Berfokus membongkar data yang tidak terstruktur (teks) menjadi sinyal yang bermakna.
+
+**Tanggung Jawab:** Mengekstrak teks dari dokumen PDF (Laporan BPK), melakukan analisis sentimen dari cuitan warga/berita, dan mengekstrak entitas (Nama Pejabat, Dinas, Lokasi) dari teks menggunakan model bahasa.
+
+**Tech Stack:** `IndoBERT` · `Hugging Face Transformers` · `NLTK / SpaCy` · `Tesseract OCR`
+
+</details>
+
+<br/>
 
 > 📚 **Final Project — Big Data & Data Lakehouse**
 
