@@ -418,7 +418,7 @@ python -m src.api.main
 
 <div align="center">
 
-![Peta Spasial](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Peta+Spasial)
+<img width="1913" height="916" alt="Image" src="https://github.com/user-attachments/assets/0792f975-f7d9-49b5-ab1a-80bb6f04d672" />
 
 *Pemetaan risiko anomali APBD berbasis geografis (Choropleth) per kecamatan.*
 
@@ -428,7 +428,7 @@ python -m src.api.main
 
 <div align="center">
 
-![Analisis Sentimen](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Analisis+Sentimen)
+<img width="1919" height="913" alt="Image" src="https://github.com/user-attachments/assets/e98a7ca6-9a4f-4120-bf0f-3e066afbce72" />
 
 *Analisis opini publik terhadap berita dan media sosial terkait SKPD.*
 
