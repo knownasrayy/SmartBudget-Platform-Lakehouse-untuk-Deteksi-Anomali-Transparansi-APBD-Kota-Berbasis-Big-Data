@@ -408,7 +408,7 @@ python -m src.api.main
 
 <div align="center">
 
-![Dashboard Utama](https://placehold.co/800x400/1a237e/ffffff?text=Screenshot+Dashboard+Utama)
+<img width="1918" height="912" alt="Image" src="https://github.com/user-attachments/assets/4f62d713-26df-4e6c-a5fc-af1fb5c7c338" />
 
 *Tampilan ringkasan eksekutif, tren waktu realisasi, dan proporsi risiko anggaran.*
 
